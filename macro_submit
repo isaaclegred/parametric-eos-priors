@@ -1,0 +1,14 @@
+
+
+Universe   = vanilla
+Executable = /home/isaac.legred/ns-struc/bin/makemacro
+Arguments  = /home/isaac.legred/EOSDrawTest/eos_dir /home/isaac.legred/EOSDrawTest/output_dir
+Log        = macro.log
+Output     = macro.out
+Error      = macro.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1
+
+
