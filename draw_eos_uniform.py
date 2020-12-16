@@ -72,7 +72,10 @@ class eos_polytrope:
 # We also need gamma1 > gamma2 > gamma3 for thermodynamic stability, so I guess we sample gamma3 first 
 # and then constrain the others based on this. This is the (somewhat) uniform prior on the gamma's, I think
 # I still need to glue together the 
-def get_eos_realization_uniform_poly (logp1_range, gamma1_range, gamma2_range, gamma3_range):
+def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
+                                        gamma3_range = gamma3_range):
+    # There's some problem with configurations not working if the parameters are too close together,
+    # so I tried to force them apart without losing too much of the prior
     eps = .1
     gamma1 = np.random.uniform(*gamma1_range)
     gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
@@ -80,6 +83,31 @@ def get_eos_realization_uniform_poly (logp1_range, gamma1_range, gamma2_range, g
     logp1 = np.random.uniform(*logp1_range) 
     return eos_polytrope(logp1, gamma1, gamma2, gamma3)    
  
+ # The first prior was not great, most of the EOS's couldn't even 
+ # support a 1.4 solar mass solar mass neutron star
+
+def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
+                                        gamma3_range = gamma3_range):
+    # Retry but center the guesses around where I know the prior is valid
+    eps = .1
+    Cov = np.matrix([[.3,0,0,0],[0,.5,0,0],[0,0,.4,0],[0,0,0,.3]])
+    means = np.array([34.384, 3.005, 2.988, 2.851)])
+    samples = np.random.multivariate_normal(means, cov)
+    # Check if in bounds
+    logp1 = samples[0]
+    gamma1 = samples[1]
+    gamma2 = samples[2]
+    gamma3 = samples[3]
+    g1cond = gamma1_range[0]<<gamma2[]
+
+    g2cond =  (gamma2_range[0]+eps < gamma2 <gamma1 - eps)
+    g3cond = gamma3_range[0] <   gamma3 < gamma2 - eps) 
+    lpcond =  = logp1_range[0] < logp1 < logp1_range[1]
+    # Fallback if the criteria aren't satisfied
+    if not (g1cond and g2cond and g3cond and lpcond):
+        return get_eos_realization_uniform_poly()
+    return eos_polytrope(logp1, gamma1, gamma2, gamma3)
+
 # Because we have an analytic equation of state, we can compute the derivative dmu/dp 
 # analytically.  Therefore we can compute phi analytically (Doesn't seem to actually be necessary)
 
