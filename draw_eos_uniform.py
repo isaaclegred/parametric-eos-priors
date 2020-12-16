@@ -136,7 +136,7 @@ def create_eos_draw_file(name):
     p = np.concatenate([p_sly, p_main])
     eps = np.concatenate([eps_sly, eps_main])
     rho_b = np.concatenate([rho_b_sly, rho_b_main])
-    data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b])) # *10 because Everything above is done in SI
+    data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
     np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density', fmt='%.10e', delimiter=",")
 
 if __name__ == "__main__":
