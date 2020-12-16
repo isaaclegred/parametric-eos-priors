@@ -91,18 +91,17 @@ def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= 
     # Retry but center the guesses around where I know the prior is valid
     eps = .1
     Cov = np.matrix([[.3,0,0,0],[0,.5,0,0],[0,0,.4,0],[0,0,0,.3]])
-    means = np.array([34.384, 3.005, 2.988, 2.851)])
+    means = np.array([34.384, 3.005, 2.988, 2.851])
     samples = np.random.multivariate_normal(means, cov)
     # Check if in bounds
     logp1 = samples[0]
     gamma1 = samples[1]
     gamma2 = samples[2]
     gamma3 = samples[3]
-    g1cond = gamma1_range[0]<<gamma2[]
-
+    g1cond = gamma1_range[0] < gamma_1 < gamma2
     g2cond =  (gamma2_range[0]+eps < gamma2 <gamma1 - eps)
-    g3cond = gamma3_range[0] <   gamma3 < gamma2 - eps) 
-    lpcond =  = logp1_range[0] < logp1 < logp1_range[1]
+    g3cond = gamma3_range[0] <   gamma3 < gamma2 - eps
+    lpcond = logp1_range[0] < logp1 < logp1_range[1]
     # Fallback if the criteria aren't satisfied
     if not (g1cond and g2cond and g3cond and lpcond):
         return get_eos_realization_uniform_poly()
@@ -128,8 +127,8 @@ sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
 def create_eos_draw_file(name):
     eos_poly = get_eos_realization_uniform_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-    p_sly = np.geomspace(1.0e31, 3.9e32, 100)
-    p_main = np.geomspace (3.9e33, 9.0e37, 800)
+    p_sly = np.geomspace(1.0e30, 3.9e31, 100)
+    p_main = np.geomspace (3.9e32, 9.0e36, 800)
     eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
     eps_main = eos_poly.eval_energy_density(p_main)
     rho_b_sly = eos_poly.eval_baryon_density(p_sly)
