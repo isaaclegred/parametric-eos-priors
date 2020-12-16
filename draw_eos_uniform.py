@@ -23,7 +23,7 @@ gamma3_range = (1, 5)
 
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
-
+parser.add_argument("--dir-index", type=int, dest="dir_index")
 # need
 class eos_polytrope:
     def __init__(self,logp1, gamma1, gamma2, gamma3):
@@ -94,7 +94,7 @@ def get_eos_realization_uniform_poly (logp1_range, gamma1_range, gamma2_range, g
 #SLy model
 sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
-# It's probably the case that from this point on Universality can handle it, (hopefully)...
+
 
  
 def create_eos_draw_file(name):
@@ -110,11 +110,12 @@ def create_eos_draw_file(name):
     eps = np.concatenate([eps_sly, eps_main])
     rho_b = np.concatenate([rho_b_sly, rho_b_main])
     data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b])) # *10 because Everything above is done in SI
-    np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density', fmt='%.10e')
+    np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density', fmt='%.10e', delimiter=",")
 
 if __name__ == "__main__":
     args = parser.parse_args()
     num_draws = args.num_draws
+    dir_index = args.dir_index
     for i in range(num_draws):
-        name = "eos-draw-" + "%06d" %i + ".csv"
+        name = "eos-draw-" + "%06d" %(dir_index*num_draws + i) + ".csv"
         create_eos_draw_file(name)

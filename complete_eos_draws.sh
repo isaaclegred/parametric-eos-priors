@@ -11,7 +11,7 @@ do
     if [ $(ls | wc -l) != $eos_per_dir ]
     then
         rm eos-draw-*.csv
-        python3 ../../draw_eos_uniform.py --num-draws $eos_per_dir 
+        python3 ../../draw_eos_uniform.py --num-draws $eos_per_dir --dir-index $index 
     fi 
     cd .. 
 done
