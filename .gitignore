@@ -1,0 +1,9 @@
+# Editor Files
+*~
+*#
+# Ignore pictures
+*.png
+# Ignore the eos directory
+*eos_dir
+# Ignore module importing artifacts
+*pycache*

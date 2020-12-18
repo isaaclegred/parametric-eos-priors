@@ -68,8 +68,17 @@ class eos_polytrope:
             rho  = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
                 lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p,self.eos), self.eos) 
         return rho
-    
-# We also need gamma1 > gamma2 > gamma3 for thermodynamic stability, so I guess we sample gamma3 first 
+    # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
+    # certain EOS
+    def is_causal(self):
+        p_max = lal.SimNeutronStarEOSMacPressure(self.eos)
+        c_s_max= lalsim.SimNeutronStarEOSSpeedOfSound(
+                    lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p_max,self.eos), self.eos)
+        return c_s_max > c * 110  # Conversion from cgs to SI (leave some leeway like in 1805.11217)
+
+             
+
+# We also need gamma1 > gamma2 > gamma3 ? and thermodynamic stability? , so I guess we sample gamma1 first 
 # and then constrain the others based on this. This is the (somewhat) uniform prior on the gamma's, I think
 # I still need to glue together the 
 def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
@@ -88,22 +97,23 @@ def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= g
 
 def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
                                         gamma3_range = gamma3_range):
-    # Retry but center the guesses around where I know the prior is valid
+    # Sample around where I know the prior is reasonable
     eps = .1
-    Cov = np.matrix([[.3,0,0,0],[0,.5,0,0],[0,0,.4,0],[0,0,0,.3]])
-    means = np.array([34.384, 3.005, 2.988, 2.851])
-    samples = np.random.multivariate_normal(means, cov)
+    Cov = np.matrix([[.32,0,0,0],[0,.23,0,0],[0,0,.13,0],[0,0,0,.1]])
+    means = np.array([34.084, 3.205, 2.988, 2.551])
+    samples = np.random.multivariate_normal(means, Cov)
     # Check if in bounds
     logp1 = samples[0]
-    gamma1 = samples[1]
+    gamma3 = samples[1]
     gamma2 = samples[2]
-    gamma3 = samples[3]
-    g1cond = gamma1_range[0] < gamma_1 < gamma2
-    g2cond =  (gamma2_range[0]+eps < gamma2 <gamma1 - eps)
-    g3cond = gamma3_range[0] <   gamma3 < gamma2 - eps
+    gamma1 = samples[3]
+    g1cond = gamma1_range[0] + eps < gamma1 < gamma2
+    g2cond =  (gamma2_range[0]+eps < gamma2 <gamma3)
+    g3cond =   gamma3 < gamma3_range[1]
     lpcond = logp1_range[0] < logp1 < logp1_range[1]
     # Fallback if the criteria aren't satisfied
     if not (g1cond and g2cond and g3cond and lpcond):
+        print("falling back")
         return get_eos_realization_uniform_poly()
     return eos_polytrope(logp1, gamma1, gamma2, gamma3)
 
