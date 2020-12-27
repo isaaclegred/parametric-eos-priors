@@ -99,7 +99,7 @@ def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= 
                                         gamma3_range = gamma3_range):
     # Sample around where I know the prior is reasonable
     eps = .1
-    Cov = np.matrix([[.32,0,0,0],[0,.23,0,0],[0,0,.13,0],[0,0,0,.1]])
+    Cov = np.matrix([[.42,0,0,0],[0,.24,0,0],[0,0,.15,0],[0,0,0,.11]])
     means = np.array([34.084, 3.205, 2.988, 2.551])
     samples = np.random.multivariate_normal(means, Cov)
     # Check if in bounds
