@@ -12,14 +12,15 @@ import astropy.units as u
 c = const.c.cgs.value
 # Characteristic refinement number (probably should be changed on a case by case basis)
 N = 100
+M_sun_si = const.M_sun.si.value
 
 # Model of equation of state prior to sample from: 
 # Need to sample gamma1, gamma2, gamma3, and logp1
 # From the Lackey and Wade paper (I don't actually )
-logp1_range = (33.531, 34.5)
-gamma1_range  = (1.52, 5)
-gamma2_range = (1.05, 5)
-gamma3_range = (1, 5)
+logp1_range = (33.6, 35.4)
+gamma1_range  = (2.0, 4.5)
+gamma2_range = (1.1, 4.5)
+gamma3_range = (1.1, 4.5)
 
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
@@ -71,10 +72,14 @@ class eos_polytrope:
     # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
     # certain EOS
     def is_causal(self):
-        p_max = lal.SimNeutronStarEOSMacPressure(self.eos)
+        p_max = lalsim.SimNeutronStarEOSMaxPressure(self.eos)
         c_s_max= lalsim.SimNeutronStarEOSSpeedOfSound(
                     lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p_max,self.eos), self.eos)
-        return c_s_max > c * 110  # Conversion from cgs to SI (leave some leeway like in 1805.11217)
+        return c_s_max < c/100*1.1   # Conversion from cgs to SI (leave some leeway like in 1805.11217)
+    def is_M_big_enough(self):
+        m_max = lalsim.SimNeutronStarMaximumMass(self.family)
+        return m_max > 1.8 * M_sun_si
+        
 
              
 
@@ -89,7 +94,7 @@ def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= g
     gamma1 = np.random.uniform(*gamma1_range)
     gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
     gamma3 = np.random.uniform(gamma3_range[0], gamma2 - eps) 
-    logp1 = np.random.uniform(*logp1_range) 
+    logp1 = np.random.uniform(*logp1_range)
     return eos_polytrope(logp1, gamma1, gamma2, gamma3)    
  
  # The first prior was not great, most of the EOS's couldn't even 
@@ -136,18 +141,22 @@ sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
  
 def create_eos_draw_file(name):
     eos_poly = get_eos_realization_uniform_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
+    if eos_poly.is_causal() and eos_poly.is_M_big_enough():
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-    p_sly = np.geomspace(1.0e30, 3.9e31, 100)
-    p_main = np.geomspace (3.9e32, 9.0e36, 800)
-    eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
-    eps_main = eos_poly.eval_energy_density(p_main)
-    rho_b_sly = eos_poly.eval_baryon_density(p_sly)
-    rho_b_main = eos_poly.eval_baryon_density(p_main)
-    p = np.concatenate([p_sly, p_main])
-    eps = np.concatenate([eps_sly, eps_main])
-    rho_b = np.concatenate([rho_b_sly, rho_b_main])
-    data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
-    np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density', fmt='%.10e', delimiter=",")
+        p_sly = np.geomspace(1.0e30, 3.9e31, 100)
+        p_main = np.geomspace (3.9e32, 9.0e36, 800)
+        eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
+        eps_main = eos_poly.eval_energy_density(p_main)
+        rho_b_sly = eos_poly.eval_baryon_density(p_sly)
+        rho_b_main = eos_poly.eval_baryon_density(p_main)
+        p = np.concatenate([p_sly, p_main])
+        eps = np.concatenate([eps_sly, eps_main])
+        rho_b = np.concatenate([rho_b_sly, rho_b_main])
+        data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
+        np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density',
+                   fmt='%.10e', delimiter=",")
+    else :
+        create_eos_draw_file(name)
 
 if __name__ == "__main__":
     args = parser.parse_args()
