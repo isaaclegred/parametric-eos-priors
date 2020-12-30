@@ -5,26 +5,48 @@ import lalsimulation as lalsim
 import lal
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.optimize
 # Number of samples to draw
-N = 500
+N = 50
 import astropy.constants as const
 Gsi = const.G.si.value
 csi  = const.c.si.value
 ccgs = const.c.cgs.value
 eos_list = []
 for i in range(N):
-    eos_list.append(pyeos.get_eos_realization_improved_poly()) #Use default parameter range
+    eos_list.append(pyeos.get_eos_realization_uniform_constrained_poly()) #Use default parameter range
 max_masses = np.array([lalsim.SimNeutronStarMaximumMass(eos.family)/lal.MSUN_SI for eos in eos_list])
 M1p4s = lal.MSUN_SI*1.4
 R1p4s =[] 
 nuc_rho_cgs = 2.8e14 # This is in cgs
-nuc_rho_si = 2.8e17*csi**2 # this is in SI
+nuc_rho_si = 2.8e17 # this is in SI
+
+# I can't believe there's no function to get pressure as a function of density.
+def find_pressure_of_density(rho, eos_wrapper):
+    def rootable(logp):
+        p = np.exp(logp)
+        return  np.arcsinh(eos_wrapper.eval_baryon_density(p) - nuc_rho_si)
+    print (rootable(np.log(2.0e30)), rootable(np.log(2.0e35)))
+    return (scipy.optimize.root_scalar(rootable, bracket=(np.log(2.0e30), np.log(2.0e35))).root)
 P2nucs = []
+
+# Testing ###############
+p = 1e33
+eos_0 = eos_list[0]
+print("p2nuc missed by", eos_0.eval_baryon_density(p) - nuc_rho_si)
+
+#########################
 for  n, eos in enumerate (eos_list):
-    # This is too silly
-    P2nucs.append(np.log10(lalsim.SimNeutronStarEOSEnergyDensityOfPressure(2*nuc_rho_si, eos.eos)/10./ccgs**2)) # In cgs
-    if max_masses[n] > 1.405:
-        R1p4s.append(lalsim.SimNeutronStarRadius(M1p4s, eos.family)/1000.)
+    # There has to be a better way to do this in the long run
+    P2nucs.append((find_pressure_of_density(nuc_rho_si, eos)))
+    if max_masses[n] > 1.43:
+        try:
+            R1p4s.append(lalsim.SimNeutronStarRadius(M1p4s, eos.family)/1000.)
+            # P2nucs.append(np.log10(lalsim.SimNeutronStarCentralPressure(M1p4s, eos.family)/10/ccgs**2))
+            
+            # In cgs)
+        except:
+            pass
     else:
          print("failed to produce a reasonable max mass")
 #Loves = np.array([lalsim.SimNeutronStarLoveNumberK2(M1p4s, eos.family) for eos in eos_list])
@@ -42,7 +64,7 @@ plt.xlabel(r"$R_{1.4}$")
 plt.ylabel("frequency")
 plt.savefig("better_prior_radii.png")
 
-
+print(P2nucs)
 # Pressure(2 rho_nuc)
 plt.figure()
 plt.hist(P2nucs, bins=30)

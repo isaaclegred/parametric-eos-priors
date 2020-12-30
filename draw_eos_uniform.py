@@ -122,6 +122,26 @@ def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= 
         return get_eos_realization_uniform_poly()
     return eos_polytrope(logp1, gamma1, gamma2, gamma3)
 
+# Enforce conditions ahead of time
+def get_eos_realization_uniform_constrained_poly (logp1_range = logp1_range,
+                                                  gamma1_range= gamma1_range,
+                                                  gamma2_range=gamma2_range,
+                                                  gamma3_range = gamma3_range):
+    # There's some problem with configurations not working if the parameters are too close together,
+    # so I tried to force them apart without losing too much of the prior
+    eps = .1
+    gamma1 = np.random.uniform(*gamma1_range)
+    gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
+    gamma3 = np.random.uniform(gamma3_range[0], gamma2 - eps)
+    logp1 = np.random.uniform(*logp1_range)
+    this_polytrope = eos_polytrope(logp1, gamma1, gamma2, gamma3)
+    if this_polytrope.is_causal() and this_polytrope.is_M_big_enough():
+        return this_polytrope
+    else:
+        return get_eos_realization_uniform_constrained_poly(logp1_range = logp1_range,
+                                                            gamma1_range= gamma1_range,
+                                      gamma2_range=gamma2_range, gamma3_range = gamma3_range)
+    
 # Because we have an analytic equation of state, we can compute the derivative dmu/dp 
 # analytically.  Therefore we can compute phi analytically (Doesn't seem to actually be necessary)
 
