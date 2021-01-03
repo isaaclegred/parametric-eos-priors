@@ -2,8 +2,8 @@
 
 dbdir="/home/isaac.legred/EOSDrawTest/eos_draw"
 initeosnum=0
-numeos=110
-eosperdir=10 
+numeos=1100
+eosperdir=50 
 
 for eos in $(seq $initeosnum $(($initeosnum+$numeos-1)))
 do
