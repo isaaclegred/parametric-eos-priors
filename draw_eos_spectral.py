@@ -1,5 +1,6 @@
-# Test Sampling eos's from parametric values
+#Test Sampling eos's from spectral coefficients
 import numpy as np
+import draw_eos_uniform as pyeos
 import scipy.interpolate as interp
 import lalsimulation as lalsim
 import lal
@@ -11,37 +12,47 @@ import astropy.units as u
 
 c = const.c.cgs.value
 # Characteristic refinement number (probably should be changed on a case by case basis)
-N = 500
+N = 100
 M_sun_si = const.M_sun.si.value
 
+# PARAMETRIC EOS
 # Model of equation of state prior to sample from: 
-# Need to sample gamma1, gamma2, gamma3, and logp1
-# From the Lackey and Wade paper (I don't actually )
-logp1_range = (33.5027, 35.4)
-gamma1_range  = (2.0, 4.5)
-gamma2_range = (1.1, 4.5)
-gamma3_range = (1.1, 4.5)
-
+# Need to sample gamma0, gamma1, gamma2, gamma3
+# From the Carney, Wade, Irwin paper (I don't actually )
+gamma0_range = (0.2, 2.0)
+gamma1_range = (-1.6, 1.7)
+gamma2_range = (-.2, .6)
+gamma3_range = (-.02, .02)
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
 # need
-class eos_polytrope:
-    def __init__(self,logp1, gamma1, gamma2, gamma3):
+class eos_spectral:
+    def __init__(self,gamma0, gamma1, gamma2, gamma3):
+        self.gamma0 = gamma0
         self.gamma1 = gamma1
         self.gamma2 = gamma2
         self.gamma3 = gamma3
-        self.logp1 = logp1
-        self.eos = lalsim.SimNeutronStarEOS4ParameterPiecewisePolytrope(
-                                                             self.logp1-1,
-                                                            self.gamma1, 
-                                                            self.gamma2, 
-                                                            self.gamma3)
-        print(logp1, gamma1, gamma2, gamma3)
-        self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
+
+        self.eos = lalsim.SimNeutronStarEOS4ParameterSpectralDecomposition(
+            self.gamma0,
+            self.gamma1, 
+            self.gamma2, 
+            self.gamma3)
+        print(gamma0, gamma1, gamma2, gamma3)
+        self.family = None
+        
     # Get the eos family from the paramaters. 
     def get_eos(self):
-        return self.family.eos
+        return self.eos
+    def get_fam(self):
+        if self.family is None:
+            try: 
+                self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
+            except:
+                self.family = None
+                print("failed to get family")
+        return self.family
     # Evaluate the eos in terms of epsilon(p)
     def eval_energy_density(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
@@ -49,7 +60,7 @@ class eos_polytrope:
             for i, pres in enumerate(p):
                 eps[i] = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(pres,self.eos)    
         else:
-             eps = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(p, self.eos)
+            eps = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(p, self.eos)
         return eps
     def eval_phi(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
@@ -69,6 +80,8 @@ class eos_polytrope:
             rho  = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
                 lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p,self.eos), self.eos) 
         return rho
+    def eval_Gamma(self, p):
+        return np.exp(self.gamma0 + self.gamma1 * p + self.gamma2 * p**2 + self.gamma3 * p**3 )
     # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
     # certain EOS
     def is_causal(self):
@@ -77,68 +90,91 @@ class eos_polytrope:
                     lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p_max,self.eos), self.eos)
         return c_s_max < c/100*1.1   # Conversion from cgs to SI (leave some leeway like in 1805.11217)
     def is_M_big_enough(self):
+
         m_max = lalsim.SimNeutronStarMaximumMass(self.family)
-        return m_max > 1.76 * M_sun_si
-        
+        return m_max > 1.8 * M_sun_si
+    def is_confined(self, ps):
+        return True
 
              
 
 # We also need gamma1 > gamma2 > gamma3 ? and thermodynamic stability? , so I guess we sample gamma1 first 
 # and then constrain the others based on this. This is the (somewhat) uniform prior on the gamma's, I think
 # I still need to glue together the 
-def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
-                                        gamma3_range = gamma3_range):
+def get_eos_realization_uniform_spec (gamma0_range = gamma0_range,
+                                      gamma1_range= gamma1_range,
+                                      gamma2_range=gamma2_range, 
+                                      gamma3_range = gamma3_range):
     # There's some problem with configurations not working if the parameters are too close together,
     # so I tried to force them apart without losing too much of the prior
-    eps = .1
+    gamma0 = np.random.uniform(*gamma0_range)
     gamma1 = np.random.uniform(*gamma1_range)
-    gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
-    gamma3 = np.random.uniform(gamma3_range[0], gamma2 - eps) 
-    logp1 = np.random.uniform(*logp1_range)
-    return eos_polytrope(logp1, gamma1, gamma2, gamma3)    
- 
- # The first prior was not great, most of the EOS's couldn't even 
- # support a 1.4 solar mass solar mass neutron star
+    gamma2 = np.random.uniform(*gamma2_range)
+    gamma3 = np.random.uniform(*gamma3_range) 
+    try:
+        print([gamma0, gamma1, gamma2, gamma3])
+        return eos_spectral(gamma0, gamma1, gamma2, gamma3)    
 
-def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
-                                        gamma3_range = gamma3_range):
-    # Sample around where I know the prior is reasonable
-    eps = .1
-    Cov = np.matrix([[.42,0,0,0],[0,.24,0,0],[0,0,.15,0],[0,0,0,.11]])
-    means = np.array([34.084, 3.205, 2.988, 2.551])
-    samples = np.random.multivariate_normal(means, Cov)
-    # Check if in bounds
-    logp1 = samples[0]
-    gamma3 = samples[1]
-    gamma2 = samples[2]
-    gamma1 = samples[3]
-    g1cond = gamma1_range[0] + eps < gamma1 < gamma2
-    g2cond =  (gamma2_range[0]+eps < gamma2 <gamma3)
-    g3cond =   gamma3 < gamma3_range[1]
-    lpcond = logp1_range[0] < logp1 < logp1_range[1]
-    # Fallback if the criteria aren't satisfied
-    if not (g1cond and g2cond and g3cond and lpcond):
-        print("falling back")
-        return get_eos_realization_uniform_poly()
-    return eos_polytrope(logp1, gamma1, gamma2, gamma3)
+    except : 
+        # try again :(
+        return get_eos_realization_uniform_spec (gamma0_range = gamma0_range,
+                                      gamma1_range= gamma1_range,
+                                      gamma2_range=gamma2_range, 
+                                      gamma3_range = gamma3_range)
+        
+ # The first prior was not great, most of the EOS's couldn't even 
+ # support a 1.4 solar mass neutron star (it really helps to enforce)
+ # the criteria ahead of time
+
+# In general I don't think this is the way to go
+# def get_eos_realization_improved_para (gamma0_range = gamma0_range,
+#                                        gamma1_range= gamma1_range,
+#                                        gamma2_range=gamma2_range, 
+#                                        gamma3_range = gamma3_range):
+#     # Sample around where I know the prior is reasonable
+#     eps = .1
+#     Cov = np.matrix([[.42,0,0,0],[0,.24,0,0],[0,0,.15,0],[0,0,0,.11]])
+#     means = np.array([34.084, 3.205, 2.988, 2.551])
+#     samples = np.random.multivariate_normal(means, Cov)
+#     # Check if in bounds
+#     logp1 = samples[0]
+#     gamma3 = samples[1]
+#     gamma2 = samples[2]
+#     gamma1 = samples[3]
+#     g1cond = gamma1_range[0] + eps < gamma1 < gamma2
+#     g2cond =  (gamma2_range[0]+eps < gamma2 <gamma3)
+#     g3cond =   gamma3 < gamma3_range[1]
+#     lpcond = logp1_range[0] < logp1 < logp1_range[1]
+#     # Fallback if the criteria aren't satisfied
+#     if not (g1cond and g2cond and g3cond and lpcond):
+#         print("falling back")
+#         return get_eos_realization_uniform_poly()
+#     return eos_parametric(logp1, gamma1, gamma2, gamma3)
 
 # Enforce conditions ahead of time
-def get_eos_realization_uniform_constrained_poly (logp1_range = logp1_range,
+def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                   gamma1_range= gamma1_range,
                                                   gamma2_range=gamma2_range,
                                                   gamma3_range = gamma3_range):
-    # There's some problem with configurations not working if the parameters are too close together,
-    # so I tried to force them apart without losing too much of the prior
-    eps = .1
+    print("gamma0_range is", gamma0_range)
+    gamma0 = np.random.uniform(*gamma0_range)
     gamma1 = np.random.uniform(*gamma1_range)
-    gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
-    gamma3 = np.random.uniform(gamma3_range[0], gamma2 - eps)
-    logp1 = np.random.uniform(*logp1_range)
-    this_polytrope = eos_polytrope(logp1, gamma1, gamma2, gamma3)
+    gamma2 = np.random.uniform(gamma2_range[0], gamma2_range[1])
+    gamma3 = np.random.uniform(gamma3_range[0], gamma3_range[1])
+    
+    try :
+        this_polytrope = eos_spectral(gamma0, gamma1, gamma2, gamma3)
+    except :
+        # Try again
+        return get_eos_realization_uniform_constrained_spec(gamma0_range = gamma0_range,
+                                                            gamma1_range= gamma1_range,
+                                                            gamma2_range=gamma2_range,
+                                                            gamma3_range = gamma3_range)
+    print("Got the polytrope")
     if this_polytrope.is_causal() and this_polytrope.is_M_big_enough():
         return this_polytrope
     else:
-        return get_eos_realization_uniform_constrained_poly(logp1_range = logp1_range,
+        return get_eos_realization_uniform_constrained_spec(gamma0_range = gamma0_range,
                                                             gamma1_range= gamma1_range,
                                       gamma2_range=gamma2_range, gamma3_range = gamma3_range)
     
@@ -154,17 +190,17 @@ def get_eos_realization_uniform_constrained_poly (logp1_range = logp1_range,
 # evaluate the modelt at the stiching point)
 
 #SLy model
-sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
+sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
 
 
  
 def create_eos_draw_file(name):
-    eos_poly = get_eos_realization_uniform_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
+    eos_poly = get_eos_realization_uniform_spec(gamma0_range, gamma1_range, gamma2_range, gamma3_range)
     if eos_poly.is_causal() and eos_poly.is_M_big_enough():
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
         p_sly = np.geomspace(1.0e30, 3.9e31, 100)
-        p_main = np.geomspace (3.9e32, 9.0e36, 800)
+        p_main = np.geomspace (3.9e32, 9.0e35, 800)
         eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
         eps_main = eos_poly.eval_energy_density(p_main)
         rho_b_sly = eos_poly.eval_baryon_density(p_sly)
