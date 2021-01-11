@@ -14,6 +14,10 @@ c = const.c.cgs.value
 # Characteristic refinement number (probably should be changed on a case by case basis)
 N = 100
 M_sun_si = const.M_sun.si.value
+SLY_CUTOFF_P = 3.9e31 # In SI
+sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
+SLY_CUTOFF_EPS = sly_polytrope_model.eval_energy_density(SLY_CUTOFF_P)
+SLY_CUTOFF_RHO = sly_polytrope_model.eval_baryon_density(SLY_CUTOFF_P)
 
 # PARAMETRIC EOS
 # Model of equation of state prior to sample from: 
@@ -34,34 +38,26 @@ class eos_spectral:
         self.gamma2 = gamma2
         self.gamma3 = gamma3
 
-        self.eos = lalsim.SimNeutronStarEOS4ParameterSpectralDecomposition(
+        self.eos = [
             self.gamma0,
             self.gamma1, 
             self.gamma2, 
-            self.gamma3)
+            self.gamma3
         print(gamma0, gamma1, gamma2, gamma3)
+        self.logGamma = np.polynomial.polynomial(self.eos)
         self.family = None
         
     # Get the eos family from the paramaters. 
+    def eval_P_of_rho(self, rho):
+        return rho**(np.exp(self.logGamma))
     def get_eos(self):
         return self.eos
-    def get_fam(self):
-        if self.family is None:
-            try: 
-                self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
-            except:
-                self.family = None
-                print("failed to get family")
-        return self.family
+    def solve_tov(self):
+        return None
     # Evaluate the eos in terms of epsilon(p)
     def eval_energy_density(self, p):
-        if isinstance(p, list) or isinstance(p, np.ndarray):    
-            eps = np.zeros(len(p))  
-            for i, pres in enumerate(p):
-                eps[i] = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(pres,self.eos)    
-        else:
-            eps = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(p, self.eos)
-        return eps
+        integrate()
+        
     def eval_phi(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
             eps = np.zeros(len(p))  
@@ -85,14 +81,10 @@ class eos_spectral:
     # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
     # certain EOS
     def is_causal(self):
-        p_max = lalsim.SimNeutronStarEOSMaxPressure(self.eos)
-        c_s_max= lalsim.SimNeutronStarEOSSpeedOfSound(
-                    lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p_max,self.eos), self.eos)
-        return c_s_max < c/100*1.1   # Conversion from cgs to SI (leave some leeway like in 1805.11217)
+        return True   # Conversion from cgs to SI (leave some leeway like in 1805.11217)
     def is_M_big_enough(self):
+        return True
 
-        m_max = lalsim.SimNeutronStarMaximumMass(self.family)
-        return m_max > 1.8 * M_sun_si
     def is_confined(self, ps):
         return True
 
