@@ -12,7 +12,7 @@ do
     # This is a bit of a problem, I don't really want to 
     # write code for python 2, but much of the code
     # I'm using is incompatible with python 3
-    python3 ../../draw_eos_spectral.py --num-draws $eos_per_dir 
+    python3 ../../draw_eos_spectral.py --num-draws $eos_per_dir --dir-index $index 
     cd .. 
 done
 cd ..
