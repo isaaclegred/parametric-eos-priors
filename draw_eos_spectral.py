@@ -27,6 +27,8 @@ parser = argparse.ArgumentParser(description='Get the number of draws needed, co
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
 # need
+
+
 class eos_spectral:
     def __init__(self,gamma0, gamma1, gamma2, gamma3):
         self.gamma0 = gamma0

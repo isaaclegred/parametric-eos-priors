@@ -7,22 +7,25 @@ import lal
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
-# Number of samples to draw
-N = 10
+
 import astropy.constants as const
 Gsi = const.G.si.value
 csi  = const.c.si.value
 ccgs = const.c.cgs.value
 eos_list = []
+samples = np.loadtxt("spectral_samples.dat")
+# Number of samples to draw
+N = len(samples)
 for i in range(N):
-    eos = py_spec_eos.get_eos_realization_uniform_spec()
+
+    params = samples[i,0:4]
+    eos = py_spec_eos.eos_spectral(params[0],params[1], params[2], params[3])
     eos.get_fam()
     eos_list.append(eos) #Use default parameter range
     print("i is ", i)
 
 max_masses = np.array([lalsim.SimNeutronStarMaximumMass(eos.get_fam())/lal.MSUN_SI for eos in eos_list if eos.get_fam() is not None])
 
-print(eos_list)
 M1p4s = lal.MSUN_SI*1.4
 R1p4s =[] 
 nuc_rho_cgs = 2.8e14 # This is in cgs
@@ -33,15 +36,15 @@ def find_pressure_of_density(rho, eos_wrapper):
     def rootable(logp):
         p = np.exp(logp)
         return  np.arcsinh(eos_wrapper.eval_baryon_density(p) - rho)
-    print (rootable(np.log(2.0e25)), rootable(np.log(2.0e38)))
-    return np.exp((scipy.optimize.root_scalar(rootable, bracket=(np.log(2.0e25), np.log(2.0e38))).root))
+    
+    return np.exp((scipy.optimize.root_scalar(rootable, bracket=(np.log(2.0e22), np.log(2.0e34))).root))
 P2nucs = []
 
 # Testing ###############
 p = 1e33
 eos_0 = eos_list[0]
 print("p2nuc missed by", eos_0.eval_baryon_density(p) - nuc_rho_si)
-print(find_pressure_of_density(2*nuc_rho_si, eos_0))
+#print(find_pressure_of_density(2*nuc_rho_si, eos_0))
 #########################
 for  n, eos in enumerate (eos_list):
     # There has to be a better way to do this in the long run
@@ -50,8 +53,9 @@ for  n, eos in enumerate (eos_list):
         if max_masses[n] > 1.43:
             try:
                 R1p4s.append(lalsim.SimNeutronStarRadius(M1p4s, eos.family)/1000.)
-                P2nucs.append(np.log10((find_pressure_of_density(2 * nuc_rho_si, eos))/ccgs**2*10)) # SI -> cgs is x 10 In cgs)
+                P2nucs.append(np.log10(find_pressure_of_density(2 * nuc_rho_si, eos)/ccgs**2*10))  # SI -> cgs is x 10 In cgs)
             except:
+                print("failed")
                 pass
         else:
             print("failed to produce a reasonable max mass")
