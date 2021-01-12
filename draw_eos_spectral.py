@@ -202,8 +202,8 @@ sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
  
 def create_eos_draw_file(name):
-    eos_poly = get_eos_realization_uniform_spec(gamma0_range, gamma1_range, gamma2_range, gamma3_range)
-    if eos_poly.is_causal() and eos_poly.is_M_big_enough():
+    eos_poly = get_eos_realization_uniform_constrained_spec(gamma0_range, gamma1_range, gamma2_range, gamma3_range)
+    if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
         p_sly = np.geomspace(1.0e30, 3.9e31, 100)
         p_main = np.geomspace (3.9e32, 9.0e35, 800)
