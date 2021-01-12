@@ -4,6 +4,7 @@
 # Ignore pictures
 *.png
 # Ignore the eos directory
-*eos_dir
+*eos_dir*
+*eos_draw*
 # Ignore module importing artifacts
 *pycache*
