@@ -23,6 +23,7 @@ gamma0_range = (0.2, 2.0)
 gamma1_range = (-1.6, 1.7)
 gamma2_range = (-.2, .6)
 gamma3_range = (-.02, .02)
+p_range = (1e31, 1e37)
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
@@ -85,16 +86,18 @@ class eos_spectral:
     # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
     # certain EOS
     def is_causal(self):
-        p_max = lalsim.SimNeutronStarEOSMaxPressure(self.eos)
-        c_s_max= lalsim.SimNeutronStarEOSSpeedOfSound(
-                    lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p_max,self.eos), self.eos)
-        return c_s_max < c/100*1.1   # Conversion from cgs to SI (leave some leeway like in 1805.11217)
+        # Find min acausal enthalpy
+        h_acaus = lalsim.SimNeutronStarEOSMinAcausalPseudoEnthalpy(self.eos)
+        # Find max enthalpy
+        h_max = lalsim.SimNeutronStarEOSMaxPseudoEnthalpy(self.eos)
+        return h_max > h_acaus
     def is_M_big_enough(self):
 
         m_max = lalsim.SimNeutronStarMaximumMass(self.family)
         return m_max > 1.8 * M_sun_si
     def is_confined(self, ps):
-        return True
+        if (.6 < self.eval_Gamma(ps).all() < 4.5):
+            return True
 
              
 
@@ -171,9 +174,12 @@ def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                             gamma2_range=gamma2_range,
                                                             gamma3_range = gamma3_range)
     print("Got the polytrope")
-    if this_polytrope.is_causal() and this_polytrope.is_M_big_enough():
+    # Might want this condition at some point
+    #and this_polytrope.is_M_big_enough()
+    if this_polytrope.is_causal()  and this_polytrope.is_confined(np.linspace(*p_range,100)):
         return this_polytrope
     else:
+        print("failed to produce a reasonable polytrope")
         return get_eos_realization_uniform_constrained_spec(gamma0_range = gamma0_range,
                                                             gamma1_range= gamma1_range,
                                       gamma2_range=gamma2_range, gamma3_range = gamma3_range)
