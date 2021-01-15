@@ -19,12 +19,15 @@ M_sun_si = const.M_sun.si.value
 # Model of equation of state prior to sample from: 
 # Need to sample gamma0, gamma1, gamma2, gamma3
 # From the Carney, Wade, Irwin paper (I don't actually )
-gamma0_range = (0.2, 2.0)
-gamma1_range = (-1.6, 1.7)
-gamma2_range = (-.2, .6)
-gamma3_range = (-.02, .02)
+
 p_range = (1e31, 1e37)
 p_0 = 3.9e32
+
+gamma0_range = (0.2, 1.6)
+gamma1_range = (-.6, 1.2)
+gamma2_range = (-.25, .3)
+gamma3_range = (-.01, .015)
+
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
