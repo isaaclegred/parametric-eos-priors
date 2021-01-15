@@ -24,6 +24,7 @@ gamma1_range = (-1.6, 1.7)
 gamma2_range = (-.2, .6)
 gamma3_range = (-.02, .02)
 p_range = (1e31, 1e37)
+p_0 = 3.9e32
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
@@ -81,16 +82,31 @@ class eos_spectral:
             rho  = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
                 lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p,self.eos), self.eos) 
         return rho
+
+    def eval_speed_of_sound(self, p):
+        if isinstance(p, list) or isinstance(p, np.ndarray):
+            cs = np.zeros(len(p))
+            for i, pres in enumerate(p):
+                try:
+                    h = lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(pres, self.eos)
+                    cs[i] = lalsim.SimNeutronStarEOSSpeedOfSound(h, self.eos)
+                except:
+                    print(pres, "failed to produce a valid sound speed")
+                    break
+        else:
+            cs  = lalsim.SimNeutronStarEOSSpeedOfSound(p, self.eos)
+        return cs
     def eval_Gamma(self, p):
-        return np.exp(self.gamma0 + self.gamma1 * p + self.gamma2 * p**2 + self.gamma3 * p**3 )
+        x = np.log( p/p_0)
+        return np.exp(self.gamma0 + self.gamma1 * x + self.gamma2 * x**2 + self.gamma3 * x**3 )
     # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
     # certain EOS
-    def is_causal(self):
-        # Find min acausal enthalpy
-        h_acaus = lalsim.SimNeutronStarEOSMinAcausalPseudoEnthalpy(self.eos)
-        # Find max enthalpy
-        h_max = lalsim.SimNeutronStarEOSMaxPseudoEnthalpy(self.eos)
-        return h_max > h_acaus
+    def is_causal(self, ps):
+        c_si = c/100 # The speed of sound in SI
+        cs = self.eval_speed_of_sound(ps)
+        cs_max = max(cs)
+        print("cs_max is", cs_max)
+        return cs_max < c_si*1.1
     def is_M_big_enough(self):
 
         m_max = lalsim.SimNeutronStarMaximumMass(self.family)
@@ -159,7 +175,6 @@ def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                   gamma1_range= gamma1_range,
                                                   gamma2_range=gamma2_range,
                                                   gamma3_range = gamma3_range):
-    print("gamma0_range is", gamma0_range)
     gamma0 = np.random.uniform(*gamma0_range)
     gamma1 = np.random.uniform(*gamma1_range)
     gamma2 = np.random.uniform(gamma2_range[0], gamma2_range[1])
@@ -173,10 +188,11 @@ def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                             gamma1_range= gamma1_range,
                                                             gamma2_range=gamma2_range,
                                                             gamma3_range = gamma3_range)
-    print("Got the polytrope")
+    
     # Might want this condition at some point
     #and this_polytrope.is_M_big_enough()
-    if this_polytrope.is_causal()  and this_polytrope.is_confined(np.linspace(*p_range,100)):
+    ps = np.linspace(*p_range,100)
+    if this_polytrope.is_causal(ps)  and this_polytrope.is_confined(ps):
         return this_polytrope
     else:
         print("failed to produce a reasonable polytrope")

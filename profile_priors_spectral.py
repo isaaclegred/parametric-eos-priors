@@ -18,7 +18,7 @@ for i in range(N):
     eos = py_spec_eos.get_eos_realization_uniform_constrained_spec()  #Use default parameter range
     eos.get_fam()
     eos_list.append(eos) 
-    print("eos is causal : ", eos.is_causal())
+    print("eos is causal : ", eos.is_causal(np.linspace(*py_spec_eos.p_range, 100)))
     print("eos is confined : ", eos.is_confined(np.linspace(*py_spec_eos.p_range, 100)))
     print("i is ", i)
     

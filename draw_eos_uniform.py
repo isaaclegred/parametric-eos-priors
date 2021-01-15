@@ -11,14 +11,14 @@ import astropy.units as u
 
 c = const.c.cgs.value
 # Characteristic refinement number (probably should be changed on a case by case basis)
-N = 500
+N = 200
 M_sun_si = const.M_sun.si.value
 
 # Model of equation of state prior to sample from: 
 # Need to sample gamma1, gamma2, gamma3, and logp1
 # From the Lackey and Wade paper (I don't actually )
 logp1_range = (33.5027, 35.4)
-gamma1_range  = (2.0, 4.5)
+gamma1_range  = (1.9, 4.5)
 gamma2_range = (1.1, 4.5)
 gamma3_range = (1.1, 4.5)
 

@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
 # Number of samples to draw
-N = 500
+N = 200
 import astropy.constants as const
 Gsi = const.G.si.value
 csi  = const.c.si.value
