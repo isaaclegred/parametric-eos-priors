@@ -3,6 +3,7 @@ import numpy as np
 import scipy.interpolate as interp
 import lalsimulation as lalsim
 import lal
+import lalinference as lalinf
 import argparse
 from matplotlib import pyplot as plt
 import astropy.constants as const
@@ -17,7 +18,7 @@ M_sun_si = const.M_sun.si.value
 # Model of equation of state prior to sample from: 
 # Need to sample gamma1, gamma2, gamma3, and logp1
 # From the Lackey and Wade paper (I don't actually )
-logp1_range = (33.5027, 35.4)
+logp1_range = (33.6, 35.4)
 gamma1_range  = (1.9, 4.5)
 gamma2_range = (1.1, 4.5)
 gamma3_range = (1.1, 4.5)
@@ -97,45 +98,39 @@ def get_eos_realization_uniform_poly (logp1_range = logp1_range, gamma1_range= g
     logp1 = np.random.uniform(*logp1_range)
     return eos_polytrope(logp1, gamma1, gamma2, gamma3)    
  
- # The first prior was not great, most of the EOS's couldn't even 
- # support a 1.4 solar mass solar mass neutron star
-
-def get_eos_realization_improved_poly (logp1_range = logp1_range, gamma1_range= gamma1_range, gamma2_range=gamma2_range, 
-                                        gamma3_range = gamma3_range):
-    # Sample around where I know the prior is reasonable
-    eps = .1
-    Cov = np.matrix([[.42,0,0,0],[0,.24,0,0],[0,0,.15,0],[0,0,0,.11]])
-    means = np.array([34.084, 3.205, 2.988, 2.551])
-    samples = np.random.multivariate_normal(means, Cov)
-    # Check if in bounds
-    logp1 = samples[0]
-    gamma3 = samples[1]
-    gamma2 = samples[2]
-    gamma1 = samples[3]
-    g1cond = gamma1_range[0] + eps < gamma1 < gamma2
-    g2cond =  (gamma2_range[0]+eps < gamma2 <gamma3)
-    g3cond =   gamma3 < gamma3_range[1]
-    lpcond = logp1_range[0] < logp1 < logp1_range[1]
-    # Fallback if the criteria aren't satisfied
-    if not (g1cond and g2cond and g3cond and lpcond):
-        print("falling back")
-        return get_eos_realization_uniform_poly()
-    return eos_polytrope(logp1, gamma1, gamma2, gamma3)
 
 # Enforce conditions ahead of time
+def criteria(logp1, gamma1, gamma2, gamma3):
+    vars = lalinf.Variables()
+    no_vary = lalinf.lalinference.LALINFERENCE_PARAM_FIXED
+    lalinf.lalinference.AddREAL8Variable(vars, "logp1", logp1, no_vary )
+    lalinf.lalinference.AddREAL8Variable(vars, "gamma1", gamma1, no_vary)
+    lalinf.lalinference.AddREAL8Variable(vars, "gamma2",  gamma2, no_vary)
+    lalinf.lalinference.AddREAL8Variable(vars, "gamma3",  gamma3, no_vary)
+    lalinf.lalinference.AddREAL8Variable(vars, "mass1",  1.4 , no_vary)
+    lalinf.lalinference.AddREAL8Variable(vars, "mass2",  1.4 , no_vary)
+    
+    a = lal.CreateStringVector("Hi")
+    process_ptable = lalinf.ParseCommandLineStringVector(a)
+    success_param = lalinf.EOSPhysicalCheck(vars, process_ptable)
+    if success_param == 0:
+        return True
+    else :
+        return False
+
+
 def get_eos_realization_uniform_constrained_poly (logp1_range = logp1_range,
                                                   gamma1_range= gamma1_range,
                                                   gamma2_range=gamma2_range,
                                                   gamma3_range = gamma3_range):
     # There's some problem with configurations not working if the parameters are too close together,
     # so I tried to force them apart without losing too much of the prior
-    eps = .1
     gamma1 = np.random.uniform(*gamma1_range)
-    gamma2 = np.random.uniform(gamma2_range[0]+eps, gamma1 - eps)
-    gamma3 = np.random.uniform(gamma3_range[0], gamma2 - eps)
+    gamma2 = np.random.uniform(*gamma2_range)
+    gamma3 = np.random.uniform(*gamma3_range)
     logp1 = np.random.uniform(*logp1_range)
     this_polytrope = eos_polytrope(logp1, gamma1, gamma2, gamma3)
-    if this_polytrope.is_causal() and this_polytrope.is_M_big_enough():
+    if criteria(logp1, gamma1, gamma2, gamma3):
         return this_polytrope
     else:
         return get_eos_realization_uniform_constrained_poly(logp1_range = logp1_range,

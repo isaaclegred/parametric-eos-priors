@@ -8,22 +8,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
 # Number of samples to draw
-N = 100
+N = 20
 import astropy.constants as const
 Gsi = const.G.si.value
 csi  = const.c.si.value
 ccgs = const.c.cgs.value
 eos_list = []
+params = np.array([[0.551056367273767, -0.5417148996519847, 0.06503562059334078, -0.00148604021538651],[0.5433926488753059, -0.4917361657495225, 0.13413782935878904, -0.009271344015786902]])
+N = len(params)
 for i in range(N):
-    eos = py_spec_eos.get_eos_realization_mapped_constrained_spec()  #Use default parameter range
+    eos = py_spec_eos.eos_spectral(*params[i])
+    print("testing for segfault")
+    eos.get_fam()
+    print("passed")
     eos_list.append(eos) 
     print("eos is causal : ", eos.is_causal(np.linspace(*py_spec_eos.p_range, 100)))
     print("eos is confined : ", eos.is_confined(np.linspace(*py_spec_eos.p_range, 100)))
     print("i is ", i)
-
-
-print("getting_max_masses")   
-max_masses = np.array([lalsim.SimNeutronStarMaximumMass(eos.get_fam())/lal.MSUN_SI for eos in eos_list])
+    
+max_masses = np.array([lalsim.SimNeutronStarMaximumMass(eos.get_fam())/lal.MSUN_SI for eos in eos_list if eos.get_fam() is not None])
 
 
 M1p4s = lal.MSUN_SI*1.4
