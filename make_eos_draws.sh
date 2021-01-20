@@ -1,6 +1,7 @@
-eos_per_dir=$1
-num_mod_dirs=$2
-eos_dir_name=$3
+# Fill in the arguments here
+eos_per_dir=100
+num_mod_dirs=100
+eos_dir_name=eos_draw_spectral
 
 mkdir $eos_dir_name
 cd $eos_dir_name
