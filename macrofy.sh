@@ -1,9 +1,9 @@
 #!/bin/bash
 
-dbdir="/home/isaac.legred/EOSDrawTest/eos_draw"
+dbdir="/home/isaac.legred/EOSDrawTest/eos_draw_spectral/"
 initeosnum=0
-numeos=1100
-eosperdir=50 
+numeos=10000
+eosperdir=100 
 
 for eos in $(seq $initeosnum $(($initeosnum+$numeos-1)))
 do

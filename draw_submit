@@ -1,0 +1,14 @@
+
+
+Universe   = vanilla
+Executable = ./make_eos_draws.sh
+Arguments  = 
+Log        = ./run_piecewise/make_eos_draws.log
+Output     = ./run_piecewise/make_eos_draws.out
+Error      = ./run_piecewise/make_eos_draws.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1
+
+
