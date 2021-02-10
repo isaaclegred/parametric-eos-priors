@@ -2,13 +2,13 @@
 
 Universe   = vanilla
 Executable = ./make_eos_draws_spectral.sh
-Arguments  = 
+Arguments  = $(Process) 10 200
 Log        = ./run_spectral/make_eos_draws_spectral.log
 Output     = ./run_spectral/make_eos_draws_spectral.out
 Error      = ./run_spectral/make_eos_draws_spectral.error
 getenv = True
 accounting_group = ligo.dev.o3.cbc.pe.lalinference
 accounting_group_user = isaac.legred
-queue 1
+queue 100
 
 

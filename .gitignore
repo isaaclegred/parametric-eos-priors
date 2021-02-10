@@ -8,3 +8,7 @@
 *eos_draw*
 # Ignore module importing artifacts
 *pycache*
+# Ignore condor artifacts
+*.log
+*.error
+*.out

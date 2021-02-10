@@ -266,18 +266,18 @@ def create_eos_draw_file(name):
     eos_poly = get_eos_realization_mapped_constrained_spec(r0_range, r1_range, r2_range, r3_range)
     if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-        p_sly = np.geomspace(1.0e30, 3.9e31, 100)
-        p_main = np.geomspace (3.9e32, 9.0e35, 800)
-        eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
+        p_small = np.linspace(1.0e12, 1.3e30, 1100)
+        p_main = np.geomspace (1.3e30, 9.0e36, 1300)
+        eps_small=  eos_poly.eval_energy_density(p_small)
         eps_main = eos_poly.eval_energy_density(p_main)
-        rho_b_sly = eos_poly.eval_baryon_density(p_sly)
+        rho_b_small = eos_poly.eval_baryon_density(p_small)
         rho_b_main = eos_poly.eval_baryon_density(p_main)
-        p = np.concatenate([p_sly, p_main])
-        eps = np.concatenate([eps_sly, eps_main])
-        rho_b = np.concatenate([rho_b_sly, rho_b_main])
+        p = np.concatenate([p_small, p_main])
+        eps = np.concatenate([eps_small, eps_main])
+        rho_b = np.concatenate([rho_b_small, rho_b_main])
         data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
-        np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density',
-                   fmt='%.10e', delimiter=",")
+        np.savetxt(name,data, header = 'pressurec2,energy_densityc2,baryon_density',
+                   fmt='%.10e', delimiter=",", comments="")
     else :
         create_eos_draw_file(name)
 
