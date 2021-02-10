@@ -1,10 +1,15 @@
-eos_per_dir=100
-num_mod_dirs=100
-eos_dir_name=eos_draw_spectral
+#! /bin/bash
+dir_index=$1
+dirs_to_make=$2
+eos_per_dir=$3
+
+((min_index=dir_index*dirs_to_make))
+eos_dir_name="production_eos_draw_spectral"
+((max_index=min_index + dirs_to_make - 1))
 
 mkdir $eos_dir_name
 cd $eos_dir_name
-for index in $(seq -f '%06g' 1 $num_mod_dirs)
+for index in $(seq -f '%06g' $min_index $max_index)
 do
     dir=DRAWmod$eos_per_dir-$index
     mkdir $dir

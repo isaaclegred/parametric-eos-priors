@@ -1,11 +1,19 @@
 #!/bin/bash
+# Trying to parallelize this
+start_index=$1
+# If we have access to a lot of procs we can make this smaller
+# Total_dirs = num_procs * dirs_per_proc
+dirs_to_make=$2
 
-dbdir="/home/isaac.legred/EOSDrawTest/eos_draw_spectral/"
-initeosnum=0
-numeos=10000
-eosperdir=100 
 
-for eos in $(seq $initeosnum $(($initeosnum+$numeos-1)))
+dbdir="/home/isaac.legred/parametric-eos-priors/fix5_eos_draw_spectral/"
+eosperdir=10
+(( total_eos_to_make=dirs_to_make*eosperdir ))
+(( initeosnum=start_index*eosperdir*dirs_to_make ))
+
+
+
+for eos in $(seq $initeosnum $(($initeosnum+$total_eos_to_make-1)))
 do
 	echo $eos
 	dirnum=$(($eos/$eosperdir))
