@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./add-covariates
+Arguments  =
+Log        = ./run_add/add.log
+Output     = ./run_add/add.out
+Error      = ./run_add/add.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

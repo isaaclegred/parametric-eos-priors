@@ -1,0 +1,127 @@
+#!/bin/bash
+
+MAX_NUM_SAMPLES=100000
+
+#Sometimes need this
+# --copy-column  "logweight_Romani_J1810" 
+
+### add pressures, macroscopic values to CSV
+
+EOS_DIR="/home/philippe.landry/nseos/eos/gp/mrgagn"
+POST_DIR_5="/home/isaac.legred/NewEOStest/corrected_total_post.csv "
+PRIOR_DIR_5="/home/isaac.legred/NewGetPlots/parametric_prior.csv " 
+
+#TAGS="$TAGS qmc-hadagn-0.5rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-0.6rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-0.7rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-0.8rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-0.9rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-1.0rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS qmc-hadagn-1.1rho_nuc-ingo-bps-3e11"
+
+#TAGS="$TAGS mbpt-hadagn-0.5rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-0.6rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-0.7rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-0.8rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-0.9rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-1.0rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-1.1rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-1.2rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-1.3rho_nuc-ingo-bps-3e11"
+#TAGS="$TAGS mbpt-hadagn-1.4rho_nuc-ingo-bps-3e11"
+
+#TAGS="$TAGS mrgagn-ingo-bps-1e10"
+
+
+
+TAGS="ONEEVENT"
+for TAG in $TAGS
+do
+
+    INPATH=$POST_DIR_5
+    OUTPATH="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
+
+    # look up pressures
+    $(which process2samples) \
+        $INPATH \
+        $OUTPATH \
+        baryon_density \
+        pressurec2 energy_densityc2 \
+        --eos-column eos \
+        --eos-dir ${EOS_DIR} \
+        --eos-num-per-dir 1000 \
+        --eos-basename 'eos-draw-%(draw)06d.csv' \
+        --reference-value 1.4e14 \
+        --reference-value 2.8e14 \
+        --reference-value 4.2e14 \
+        --reference-value 5.6e14 \
+        --reference-value 8.4e14 \
+        --reference-value 11.2e14 \
+        --max-num-samples $MAX_NUM_SAMPLES \
+        --Verbose
+
+    # look up macroscopic paramers
+    $(which process2samples) \
+        $OUTPATH \
+        $OUTPATH \
+        M \
+        R Lambda \
+        --nearest-neighbor \
+        --eos-column eos \
+        --eos-dir ${EOS_DIR} \
+        --eos-num-per-dir 1000 \
+        --eos-basename 'macro-draw-%(draw)06d.csv' \
+        --reference-value 1.0 \
+        --reference-value 1.2 \
+        --reference-value 1.4 \
+        --reference-value 1.6 \
+        --reference-value 1.8 \
+        --reference-value 2.0 \
+        --max-num-samples $MAX_NUM_SAMPLES \
+        --Verbose
+
+
+    # Get the max masses
+    $(which process2extrema) \
+        $OUTPATH \
+	$OUTPATH \
+        M \
+        --copy-column  "logweight_LVC_GW190425_PhenomPNRThi" \
+        --copy-column  "logweight_LVC_GW170817_PhenomPNRTlo" \
+        --copy-column  "logweight_Antoniadis_J0348" \
+        --copy-column  "logweight_Miller_J0030_threespot" \
+        --copy-column  "logweight_Cromartie_J0740" \
+        --copy-column  "logweight_total" \
+        --copy-column  "pressurec2(baryon_density=1.4e+14)" \
+        --copy-column  "pressurec2(baryon_density=2.8e+14)" \
+        --copy-column  "pressurec2(baryon_density=4.2e+14)" \
+        --copy-column  "pressurec2(baryon_density=5.6e+14)" \
+        --copy-column  "pressurec2(baryon_density=8.4e+14)" \
+        --copy-column  "pressurec2(baryon_density=1.12e+15)" \
+        --copy-column  "energy_densityc2(baryon_density=1.4e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=2.8e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=4.2e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=5.6e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=8.4e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=1.12e+15)" \
+        --copy-column  "R(M=1.0)" \
+        --copy-column  "R(M=1.2)" \
+        --copy-column  "R(M=1.4)" \
+        --copy-column  "R(M=1.6)" \
+        --copy-column  "R(M=1.8)" \
+        --copy-column  "R(M=2.0)" \
+        --copy-column  "Lambda(M=1.0)" \
+        --copy-column  "Lambda(M=1.2)" \
+        --copy-column  "Lambda(M=1.4)" \
+        --copy-column  "Lambda(M=1.6)" \
+        --copy-column  "Lambda(M=1.8)" \
+        --copy-column  "Lambda(M=2.0)" \
+        --new-column M Mmax Mmin \
+        --column-range M 0.1 4.0 \
+        --eos-column eos \
+        --eos-dir ${EOS_DIR} \
+	--eos-num-per-dir 1000 \
+	--eos-basename 'macro-draw-%(draw)06d.csv' \
+	--max-num-samples $MAX_NUM_SAMPLES \
+	--Verbose
+done

@@ -1,0 +1,74 @@
+#!/bin/bash
+
+### make plots of nuclear parameters alongside EoS params and macroscopic observables
+
+# E_beta,E_PNM,x,S0,L,Ksym,eps_total,eps_electron,mu_electron,EoS,Mmax,numbranches,logweight_NICER,logweight_GW170817,logweight_GW190425,logweight_J0348,logweight_J0740,logweight_J1614,pressurec2(baryon_density=1.4e+14),pressurec2(baryon_density=2.8e+14),pressurec2(baryon_density=4.2e+14),pressurec2(baryon_density=5.6e+14),pressurec2(baryon_density=8.4e+14),pressurec2(baryon_density=1.12e+15),energy_densityc2(baryon_density=1.4e+14),energy_densityc2(baryon_density=2.8e+14),energy_densityc2(baryon_density=4.2e+14),energy_densityc2(baryon_density=5.6e+14),energy_densityc2(baryon_density=8.4e+14),energy_densityc2(baryon_density=1.12e+15),R(M=1.4),R(M=1.6),Lambda(M=1.4),Lambda(M=1.6)
+
+#-------------------------------------------------
+
+NUM_POINTS=101
+MAX_NUM_SAMPLES=100000
+
+#---
+
+# plot different posteriors for the same set of prior draws
+TAGS="/home/philippe.landry/nseos/eos/gp/mrgagn/"
+
+for TAG in $TAGS
+do
+
+    echo "----------"
+    echo "processing $TAG"
+    echo "----------"
+
+    INPATH="/home/isaac.legred/NewGetPlots/samples_6_event_with_m.csv"
+    PRIOR="/home/isaac.legred/NewGetPlots/parametric_prior_6_events_with_m.csv"
+    ORIGINAL="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
+    kde-corner-samples \
+        Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=2.8e+14)' 'pressurec2(baryon_density=5.6e+14)' \
+        --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
+        --column-range Mmax 1.90 3.0 \
+        --column-bandwidth Mmax 0.01 \
+        --column-label 'R(M=1.4)' '$R_{1.4}\ [\mathrm{km}]$' \
+        --column-range 'R(M=1.4)' 8.0 17.0 \
+        --column-bandwidth 'R(M=1.4)' 0.05 \
+        --column-label 'Lambda(M=1.4)' '$\Lambda_{1.4}$' \
+        --column-range 'Lambda(M=1.4)' 0.0 1000.0 \
+        --column-bandwidth 'Lambda(M=1.4)' 10 \
+        --logcolumn 'pressurec2(baryon_density=2.8e+14)' \
+        --column-label 'pressurec2(baryon_density=2.8e+14)' '$\ln\left(p_{1.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
+        --column-range 'pressurec2(baryon_density=2.8e+14)' 26.0 32.0 \
+        --column-bandwidth 'pressurec2(baryon_density=2.8e+14)' 0.05 \
+        --logcolumn 'pressurec2(baryon_density=5.6e+14)' \
+        --column-label 'pressurec2(baryon_density=5.6e+14)' '$\ln\left(p_{2.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
+        --column-range 'pressurec2(baryon_density=5.6e+14)' 26.0 34.0 \
+        --column-bandwidth 'pressurec2(baryon_density=5.6e+14)' 0.05 \
+        -s ALL6 $INPATH \
+        --color ALL6 b \
+        --weight-column ALL6 logweight_total \
+        --weight-column-is-log ALL6 logweight_total \
+        -s PRIOR $PRIOR \
+        --color PRIOR r \
+        --weight-column PRIOR logweight_total \
+        --weight-column-is-log PRIOR logweight_total \
+        -s ORIGINAL5 $ORIGINAL \
+        --color ORIGINAL5 g \
+        --weight-column ORIGINAL5 logweight_total \
+        --weight-column-is-log ORIGINAL5 logweight_total \
+        --output-dir "/home/isaac.legred/GetPlots" \
+        --tag "covariates-new_event-original_and_prior" \
+        --num-proc 50 \
+        --num-points $NUM_POINTS \
+        --level 0.5 --level 0.9 \
+        --legend \
+        --include-neff \
+        --grid \
+        --rotate-xticklabels 90 \
+        --figwidth 15 \
+        --figheight 15 \
+        --Verbose \
+        --no-scatter \
+        --output-dir "/home/isaac.legred/GetPlots" \
+        --Verbose \
+        
+done
