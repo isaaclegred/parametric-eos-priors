@@ -6,8 +6,8 @@ start_index=$1
 dirs_to_make=$2
 
 
-dbdir="/home/isaac.legred/parametric-eos-priors/fix5_eos_draw_spectral/"
-eosperdir=10
+dbdir="/home/isaac.legred/parametric-eos-priors/production_eos_draw_spectral/"
+eosperdir=200
 (( total_eos_to_make=dirs_to_make*eosperdir ))
 (( initeosnum=start_index*eosperdir*dirs_to_make ))
 
