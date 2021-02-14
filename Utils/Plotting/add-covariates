@@ -8,7 +8,7 @@ MAX_NUM_SAMPLES=100000
 ### add pressures, macroscopic values to CSV
 
 EOS_DIR="/home/philippe.landry/nseos/eos/gp/mrgagn"
-POST_DIR_5="/home/isaac.legred/NewEOStest/corrected_total_post.csv "
+POST_DIR_5="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
 PRIOR_DIR_5="/home/isaac.legred/NewGetPlots/parametric_prior.csv " 
 
 #TAGS="$TAGS qmc-hadagn-0.5rho_nuc-ingo-bps-3e11"
@@ -57,6 +57,7 @@ do
         --reference-value 5.6e14 \
         --reference-value 8.4e14 \
         --reference-value 11.2e14 \
+        --reference-value 16.8e14 \
         --max-num-samples $MAX_NUM_SAMPLES \
         --Verbose
 
@@ -98,12 +99,14 @@ do
         --copy-column  "pressurec2(baryon_density=5.6e+14)" \
         --copy-column  "pressurec2(baryon_density=8.4e+14)" \
         --copy-column  "pressurec2(baryon_density=1.12e+15)" \
+        --copy-column  "pressurec2(baryon_density=1.68e+15)" \
         --copy-column  "energy_densityc2(baryon_density=1.4e+14)" \
         --copy-column  "energy_densityc2(baryon_density=2.8e+14)" \
         --copy-column  "energy_densityc2(baryon_density=4.2e+14)" \
         --copy-column  "energy_densityc2(baryon_density=5.6e+14)" \
         --copy-column  "energy_densityc2(baryon_density=8.4e+14)" \
         --copy-column  "energy_densityc2(baryon_density=1.12e+15)" \
+        --copy-column  "energy_densityc2(baryon_density=1.68e+15)" \
         --copy-column  "R(M=1.0)" \
         --copy-column  "R(M=1.2)" \
         --copy-column  "R(M=1.4)" \

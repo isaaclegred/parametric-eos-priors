@@ -21,11 +21,11 @@ do
     echo "processing $TAG"
     echo "----------"
 
-    INPATH="/home/isaac.legred/NewGetPlots/samples_6_event_with_m.csv"
-    PRIOR="/home/isaac.legred/NewGetPlots/parametric_prior_6_events_with_m.csv"
+    INPATH="/home/isaac.legred/NewGetPlots/samples_6_event.csv" 
+    PRIOR="/home/isaac.legred/NewGetPlots/parametric_prior_good_pressures.csv"
     ORIGINAL="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
     kde-corner-samples \
-        Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=2.8e+14)' 'pressurec2(baryon_density=5.6e+14)' \
+        Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
         --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
         --column-range Mmax 1.90 3.0 \
         --column-bandwidth Mmax 0.01 \
@@ -35,14 +35,14 @@ do
         --column-label 'Lambda(M=1.4)' '$\Lambda_{1.4}$' \
         --column-range 'Lambda(M=1.4)' 0.0 1000.0 \
         --column-bandwidth 'Lambda(M=1.4)' 10 \
-        --logcolumn 'pressurec2(baryon_density=2.8e+14)' \
-        --column-label 'pressurec2(baryon_density=2.8e+14)' '$\ln\left(p_{1.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
-        --column-range 'pressurec2(baryon_density=2.8e+14)' 26.0 32.0 \
-        --column-bandwidth 'pressurec2(baryon_density=2.8e+14)' 0.05 \
         --logcolumn 'pressurec2(baryon_density=5.6e+14)' \
         --column-label 'pressurec2(baryon_density=5.6e+14)' '$\ln\left(p_{2.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
-        --column-range 'pressurec2(baryon_density=5.6e+14)' 26.0 34.0 \
+        --column-range 'pressurec2(baryon_density=5.6e+14)' 27.0 33.0 \
         --column-bandwidth 'pressurec2(baryon_density=5.6e+14)' 0.05 \
+        --logcolumn 'pressurec2(baryon_density=1.68e+15)' \
+        --column-label 'pressurec2(baryon_density=1.68e+15)' '$\ln\left(p_{6.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
+        --column-range 'pressurec2(baryon_density=1.68e+15)' 30.0 36.0 \
+        --column-bandwidth 'pressurec2(baryon_density=1.68e+15)' 0.05 \
         -s ALL6 $INPATH \
         --color ALL6 b \
         --weight-column ALL6 logweight_total \
@@ -55,8 +55,8 @@ do
         --color ORIGINAL5 g \
         --weight-column ORIGINAL5 logweight_total \
         --weight-column-is-log ORIGINAL5 logweight_total \
-        --output-dir "/home/isaac.legred/GetPlots" \
-        --tag "covariates-new_event-original_and_prior" \
+        --output-dir "/home/isaac.legred/NewGetPlots" \
+        --tag "covariates-new_event-original_and_prior_right" \
         --num-proc 50 \
         --num-points $NUM_POINTS \
         --level 0.5 --level 0.9 \
