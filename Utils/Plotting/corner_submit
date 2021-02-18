@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./corner-covariates
+Arguments  =
+Log        = ./run_corner/corner.log
+Output     = ./run_corner/corner.out
+Error      = ./run_corner/corner.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

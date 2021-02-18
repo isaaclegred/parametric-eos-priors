@@ -12,3 +12,6 @@
 *.log
 *.error
 *.out
+
+#Ignore csv
+*.csv

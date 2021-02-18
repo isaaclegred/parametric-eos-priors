@@ -155,23 +155,21 @@ sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
  
 def create_eos_draw_file(name):
-    eos_poly = get_eos_realization_uniform_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
-    if eos_poly.is_causal() and eos_poly.is_M_big_enough():
-    # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-        p_sly = np.geomspace(1.0e30, 3.9e31, 100)
-        p_main = np.geomspace (3.9e32, 9.0e36, 800)
-        eps_sly = sly_polytrope_model.eval_energy_density(p_sly)
-        eps_main = eos_poly.eval_energy_density(p_main)
-        rho_b_sly = eos_poly.eval_baryon_density(p_sly)
-        rho_b_main = eos_poly.eval_baryon_density(p_main)
-        p = np.concatenate([p_sly, p_main])
-        eps = np.concatenate([eps_sly, eps_main])
-        rho_b = np.concatenate([rho_b_sly, rho_b_main])
-        data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
-        np.savetxt(name,data, header = 'pressurec2, energy_densityc2, baryon_density',
-                   fmt='%.10e', delimiter=",")
-    else :
-        create_eos_draw_file(name)
+    eos_poly = get_eos_realization_uniform_constrained_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
+    # FIXME WORRY ABOUT CGS VS SI!!!!! (UPDATE : Everything is in SI till the last step :/ ) 
+    p_small = np.linspace(1.0e12, 1.3e30, 600)
+    p_main = np.geomspace (1.3e30, 9.0e36, 700)
+    eps_small=  eos_poly.eval_energy_density(p_small)
+    eps_main = eos_poly.eval_energy_density(p_main)
+    rho_b_small = eos_poly.eval_baryon_density(p_small)
+    rho_b_main = eos_poly.eval_baryon_density(p_main)
+    p = np.concatenate([p_small, p_main])
+    eps = np.concatenate([eps_small, eps_main])
+    rho_b = np.concatenate([rho_b_small, rho_b_main])
+    data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
+    np.savetxt(name,data, header = 'pressurec2,energy_densityc2,baryon_density',
+               fmt='%.10e', delimiter=",", comments="")
+    
 
 if __name__ == "__main__":
     args = parser.parse_args()
