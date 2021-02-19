@@ -7,9 +7,10 @@ MAX_NUM_SAMPLES=100000
 
 ### add pressures, macroscopic values to CSV
 
-EOS_DIR="/home/philippe.landry/nseos/eos/gp/mrgagn"
-POST_DIR_5="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
-PRIOR_DIR_5="/home/isaac.legred/NewGetPlots/parametric_prior.csv " 
+NONPAR_EOS_DIR="/home/philippe.landry/gpr-eos-stacking/EoS/mrgagn"
+PARAMETRIC_EOS_DIR="/home/isaac.legred/parametric-eos-priors/production_eos_draw_spectral/"
+POST_DIR_5="/home/isaac.legred/ParametricPlotting/"
+
 
 #TAGS="$TAGS qmc-hadagn-0.5rho_nuc-ingo-bps-3e11"
 #TAGS="$TAGS qmc-hadagn-0.6rho_nuc-ingo-bps-3e11"
@@ -34,13 +35,20 @@ PRIOR_DIR_5="/home/isaac.legred/NewGetPlots/parametric_prior.csv "
 
 
 
-TAGS="ONEEVENT"
+TAGS="corrected_original_post.csv corrected_parametric_post.csv"
+EOS_DIR_TAGS="$NONPAR_EOS_DIR $PARAMETRIC_EOS_DIR"
+EOS_PER_DIR="1000 200"
+EOS_COUNT_ARR=($EOS_PER_DIR)
+counter=0
 for TAG in $TAGS
 do
-
-    INPATH=$POST_DIR_5
-    OUTPATH="/home/isaac.legred/NewGetPlots/samples_5_events.csv"
-
+    EOS_DIRS=($EOS_DIR_TAGS)
+    EOS_DIR=${EOS_DIRS[$counter]}
+    INPATH=$POST_DIR_5$TAG
+    echo $INPATH
+    OUTPATH=$INPATH
+    EOS_NUM_PER_DIR=${EOS_COUNT_ARR[$counter]}
+    counter=$((counter+1))
     # look up pressures
     $(which process2samples) \
         $INPATH \
@@ -49,7 +57,7 @@ do
         pressurec2 energy_densityc2 \
         --eos-column eos \
         --eos-dir ${EOS_DIR} \
-        --eos-num-per-dir 1000 \
+        --eos-num-per-dir ${EOS_NUM_PER_DIR} \
         --eos-basename 'eos-draw-%(draw)06d.csv' \
         --reference-value 1.4e14 \
         --reference-value 2.8e14 \
@@ -70,7 +78,7 @@ do
         --nearest-neighbor \
         --eos-column eos \
         --eos-dir ${EOS_DIR} \
-        --eos-num-per-dir 1000 \
+        --eos-num-per-dir ${EOS_NUM_PER_DIR} \
         --eos-basename 'macro-draw-%(draw)06d.csv' \
         --reference-value 1.0 \
         --reference-value 1.2 \
@@ -123,7 +131,7 @@ do
         --column-range M 0.1 4.0 \
         --eos-column eos \
         --eos-dir ${EOS_DIR} \
-	--eos-num-per-dir 1000 \
+	--eos-num-per-dir ${EOS_NUM_PER_DIR} \
 	--eos-basename 'macro-draw-%(draw)06d.csv' \
 	--max-num-samples $MAX_NUM_SAMPLES \
 	--Verbose
