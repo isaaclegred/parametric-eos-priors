@@ -40,6 +40,9 @@ for index in range(1, num_weights+1):
     if "Romani_J1810" in current_event:
         new_header += "logweight_Romani_J1810,"
         
+if new_header[-1] == ",":
+    new_header = new_header[:-1]
+
         
 source_data = np.loadtxt(source_path,skiprows=1,delimiter=",")    
 np.savetxt(output_path, source_data,  header = new_header, comments="", delimiter=",")

@@ -20,10 +20,17 @@ do
     echo "----------"
     echo "processing $TAG"
     echo "----------"
-
-    INPATH="/home/isaac.legred/ParametricPlotting/corrected_parametric_post.csv"
-    PRIOR="/home/isaac.legred/ParametricPlotting/parametric_prior_good_pressures.csv"
+    # Again this is silly but will make things easier
+    # This script should only be called by condor, and in particular with
+    # the submit file that requires you to be in the correct directory anways
+    # this shouldn't cause big problems for now
+    cd ../..
+    MAIN_DIR=$(pwd)
+    cd Utils/Plotting
+    
+    NEW="/home/isaac.legred/ParametricPlotting/corrected_parametric_post.csv"
     ORIGINAL="/home/isaac.legred/ParametricPlotting/corrected_original_post.csv "
+    
     kde-corner-samples \
         Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
         --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
@@ -43,16 +50,16 @@ do
         --column-label 'pressurec2(baryon_density=1.68e+15)' '$\ln\left(p_{6.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
         --column-range 'pressurec2(baryon_density=1.68e+15)' 30.0 36.0 \
         --column-bandwidth 'pressurec2(baryon_density=1.68e+15)' 0.05 \
-        -s PARAMETRIC $INPATH \
+        -s PARAMETRIC $NEW \
         --color PARAMETRIC b \
         --weight-column PARAMETRIC logweight_total \
         --weight-column-is-log PARAMETRIC logweight_total \
-        -s PRIOR $PRIOR \
-        --color PRIOR r \
-        --weight-column PRIOR logweight_total \
-        --weight-column-is-log PRIOR logweight_total \
+        -s NPPRIOR $ORIGINAL \
+        --color NPPRIOR r \
+        -s PARPRIOR $INPATH \
+        --color PARPRIOR g \
         -s NONPARAMETRIC $ORIGINAL \
-        --color NONPARAMETRIC g \
+        --color NONPARAMETRIC orange \
         --weight-column NONPARAMETRIC logweight_total \
         --weight-column-is-log NONPARAMETRIC logweight_total \
         --output-dir "/home/isaac.legred/ParametricPlotting/" \
