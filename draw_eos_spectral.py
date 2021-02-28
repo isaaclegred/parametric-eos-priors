@@ -185,12 +185,13 @@ def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
     gamma2 = np.random.uniform(gamma2_range[0], gamma2_range[1])
     gamma3 = np.random.uniform(gamma3_range[0], gamma3_range[1])
 
-    print("error is happening where I think it is ")
     try :
         if not criteria(gamma0, gamma1, gamma2, gamma3):
             raise ValueError("Did not meet the required Gamma Criteria") 
         this_polytrope = eos_spectral(gamma0, gamma1, gamma2, gamma3)
-        if 3 < this_polytrope.get_max_M() or 1.8 > this_polytrope.get_max_M():
+        # In principle the maximum mass below 1.9 should be fine,
+        # but there is no way to know 
+        if 3 < this_polytrope.get_max_M() or 1.7 > this_polytrope.get_max_M():
             print("throwing an exception")
             raise ValueError("M is not in the right range")
         print(":)")
@@ -225,17 +226,15 @@ def get_eos_realization_mapped_constrained_spec (r0_range = r0_range,
     gamma2 = gammas[2,0]
     gamma3 = gammas[3,0]
     print(gamma0, gamma1, gamma2, gamma3)
-    print("error is happening where I think it is ")
     failure = False
     try :
         if not criteria(gamma0, gamma1, gamma2, gamma3):
             failure = True
         this_polytrope = eos_spectral(gamma0, gamma1, gamma2, gamma3)
-        if 3 < this_polytrope.get_max_M() or 1.8 > this_polytrope.get_max_M():
+        if 3 < this_polytrope.get_max_M() or 1.7 > this_polytrope.get_max_M():
             failure = True
-        print(":)")
+        
     except :
-        print(":)")
         # Try again
         return get_eos_realization_mapped_constrained_spec(r0_range = r0_range,
                                                             r1_range= r1_range,
@@ -247,7 +246,58 @@ def get_eos_realization_mapped_constrained_spec (r0_range = r0_range,
                                                             r2_range= r2_range,
                                                             r3_range = r3_range)
     return this_polytrope
-     
+
+
+
+# Inspired by  https://arxiv.org/pdf/2001.01747.pdf appendix B, see there for help
+def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
+                                                 r1_range= r1_range,
+                                                 r2_range= r2_range,
+                                                 r3_range = r3_range):
+    ################################################################
+    ranges= [r0_range, r1_range, r2_range, r3_range]
+    # Do something cleverer here
+    means = [np.mean(this_range) for this_range in ranges]
+    cov = np.diag([np.std(this_range) for this_range in ranges])
+    [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov) 
+    
+    
+
+    
+    ################################################################
+    gammas = map_rs_to_gammas(r0, r1, r2, r3)
+    gamma0 = gammas[0,0]
+    gamma1 = gammas[1,0]
+    gamma2 = gammas[2,0]
+    gamma3 = gammas[3,0]
+    print(gamma0, gamma1, gamma2, gamma3)
+    failure = False
+    try :
+        if not criteria(gamma0, gamma1, gamma2, gamma3):
+            failure = True
+        this_polytrope = eos_spectral(gamma0, gamma1, gamma2, gamma3)
+        if 3 < this_polytrope.get_max_M() or 1.7 > this_polytrope.get_max_M():
+            failure = True
+    except :
+        # Try again
+        return get_eos_realization_mapped_gaussian_constrained_spec(r0_range = r0_range,
+                                                            r1_range= r1_range,
+                                                            r2_range=r2_range,
+                                                            r3_range = r3_range)
+    if failure:
+        return get_eos_realization_mapped_gaussian_constrained_spec(r0_range = r0_range,
+                                                            r1_range= r1_range,
+                                                            r2_range= r2_range,
+                                                            r3_range = r3_range)
+    return this_polytrope
+
+
+
+
+
+
+
+
 
 # Stitch EoS onto the known EoS below nuclear saturation density. 
 # Use Sly log(p1) = 34.384, gamma1 = 3.005, gamma2 = 2.988, gamma3 = 2.851
@@ -263,7 +313,8 @@ sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
  
 def create_eos_draw_file(name):
-    eos_poly = get_eos_realization_mapped_constrained_spec(r0_range, r1_range, r2_range, r3_range)
+    print(name)
+    eos_poly = get_eos_realization_mapped_gaussian_constrained_spec(r0_range, r1_range, r2_range, r3_range)
     if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
         p_small = np.linspace(1.0e12, 1.3e30, 1100)
