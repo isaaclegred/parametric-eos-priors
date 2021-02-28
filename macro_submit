@@ -2,7 +2,7 @@
 
 Universe   = vanilla
 Executable = ./macrofy.sh
-Arguments  = "$(Process) 10"
+Arguments  = "$(Process) 1 0"
 Log        = macro.log
 Output     = macro.out
 Error      = macro.error
