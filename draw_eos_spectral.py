@@ -1,6 +1,6 @@
 #Test Sampling eos's from spectral coefficients
 import numpy as np
-import draw_eos_uniform as pyeos
+import draw_eos_piecewise as pyeos
 import scipy.interpolate as interp
 import lalsimulation as lalsim
 import lalinference as lalinf
@@ -258,7 +258,7 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
     ranges= [r0_range, r1_range, r2_range, r3_range]
     # Do something cleverer here
     means = [np.mean(this_range) for this_range in ranges]
-    cov = np.diag([np.std(this_range) for this_range in ranges])
+    cov = 1/3*np.diag([np.std(this_range) for this_range in ranges])
     [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov) 
     
     
