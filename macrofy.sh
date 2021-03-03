@@ -5,9 +5,9 @@ relative_start=$1
 # Total_dirs = num_procs * dirs_per_proc
 dirs_to_make=$2
 global_start=$3
-start_index=((relative_start + global_start))
+((start_index=relative_start + global_start))
 
-dbdir="/home/isaac.legred/parametric-eos-priors/gaussian_eos_draw_piecewise/"
+dbdir="/home/isaac.legred/parametric-eos-priors/gaussian_eos_draw_spectral/"
 eosperdir=100
 (( total_eos_to_make=dirs_to_make*eosperdir ))
 (( initeosnum=start_index*eosperdir*dirs_to_make ))
