@@ -2,7 +2,7 @@
 
 Universe   = vanilla
 Executable = ./make_eos_draws_piecewise.sh
-Arguments  = $(Process) 10 200
+Arguments  = $(Process) 10 100
 Log        = ./run_piecewise/make_eos_draws.log
 Output     = ./run_piecewise/make_eos_draws.out
 Error      = ./run_piecewise/make_eos_draws.error
