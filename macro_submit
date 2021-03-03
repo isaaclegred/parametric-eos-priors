@@ -2,7 +2,7 @@
 
 Universe   = vanilla
 Executable = ./macrofy.sh
-Arguments  = "$(Process) 10 0 '/home/isaac.legred/parametric-eos-priors/large_eos_draw_piecewise/' 100"
+Arguments  = "$(Process) 10 0 '/home/isaac.legred/parametric-eos-priors/good_gaussian_eos_draw_spectral/' 100"
 Log        = macro.log
 Output     = macro.out
 Error      = macro.error
