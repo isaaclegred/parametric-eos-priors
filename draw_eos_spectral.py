@@ -317,8 +317,8 @@ def create_eos_draw_file(name):
     eos_poly = get_eos_realization_mapped_gaussian_constrained_spec(r0_range, r1_range, r2_range, r3_range)
     if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-        p_small = np.linspace(1.0e12, 1.3e30, 1100)
-        p_main = np.geomspace (1.3e30, 9.0e36, 1300)
+        p_small = np.linspace(1.0e12, 1.3e30, 300)
+        p_main = np.linspace (1.3e30, 9.0e36, 500)
         eps_small=  eos_poly.eval_energy_density(p_small)
         eps_main = eos_poly.eval_energy_density(p_main)
         rho_b_small = eos_poly.eval_baryon_density(p_small)
