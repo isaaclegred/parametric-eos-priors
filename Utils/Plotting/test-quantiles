@@ -1,80 +1,46 @@
 #!/bin/bash
 
 ### test extracting quantiles
-export total_post="/home/isaac.legred/NewPulasrEOSTest/total_post.csv"
-export total_post_5_events="/home/isaac.legred/NewEOStest/total_post.csv"
-export eos_dir="/home/philippe.landry/nseos/eos/gp/mrgagn"
-
-#echo \
-process2quantiles \
-    $total_post \
-    ./test-quantiles.csv \
-    baryon_density \
-    pressurec2 \
-    2.8e13 2.8e15 \
-    --logcolumn baryon_density \
-    --max-num-samples 50000 \
-    --weight-column logweight_total \
-    --weight-column-is-log logweight_total \
-    --eos-column eos \
-    --eos-dir $eos_dir \
-    --eos-num-per-dir 1000 \
-    --eos-basename 'eos-draw-%(draw)06d.csv' \
-    --num-points 100 \
-    --Verbose \
-
-
-### test plotting quantiles
-
-#echo \
-plot-quantiles \
-    pressurec2 \
-    baryon_density \
-    2.8e13 2.8e15 \
-    --logcolumn baryon_density \
-    --column-label baryon_density '$\rho\ [\mathrm{g}/\mathrm{cm}^3]$' \
-    --logcolumn pressurec2 \
-    --column-label pressurec2 '$p\ [\mathrm{dyn}/\mathrm{cm}^2]$' \
-    --y-multiplier c2 \
-    --legend \
-    --samples PSR+GW+NICER ./test-quantiles.csv \
-    --num-points 50 \
-    --filled \
-    --quantile 0.05 --quantile 0.25 \
-    --Verbose
-
-### test plotting directly from process directory
-
-#echo \
+cd ../..
+MAIN_DIR=$(pwd)
+cd Utils/Plotting
+export par_post=$MAIN_DIR"/parametric_post.csv"
+export nonpar_post=$MAIN_DIR"/nonparametric_post.csv "
+export eos_dir="/home/isaac.legred/parametric-eos-priors/production_eos_draw_spectral"
+export eos_dir_nonpar="/home/philippe.landry/gpr-eos-stacking/EoS/mrgagn"
 plot-process \
     pressurec2 \
     baryon_density \
-    2.8e13 2.8e15 \
+    2.8e13 6.8e15 \
+    --seed 123 \
     --logcolumn baryon_density \
     --column-label baryon_density '$\rho\ [\mathrm{g}/\mathrm{cm}^3]$' \
     --logcolumn pressurec2 \
     --column-label pressurec2 '$p\ [\mathrm{dyn}/\mathrm{cm}^2]$' \
     --y-multiplier c2 \
-    --samples PSR+GW+NICER $total_post_5_events \
-    --samples PSR+GW+NICER+NEW $total_post \
-    --max-num-samples PSR+GW+NICER 50000 \
-    --legend
-    --max-num-samples PSR+GW+NICER+NEW 50000 \
-    --weight-column PSR+GW+NICER logweight_total \
-    --weight-column-is-log PSR+GW+NICER logweight_total \
-    --weight-column PSR+GW+NICER+NEW logweight_total \
-    --weight-column-is-log PSR+GW+NICER+NEW logweight_total \
+    --samples "PARAMETRIC(Pulsars)" $par_post \
+    --samples "NONPARAMETRIC(Pulsars)" $nonpar_post\
+    --max-num-samples "PARAMETRIC(Pulsars)" 70000 \
+    --max-num-samples "NONPARAMETRIC(Pulsars)" 70000 \
+    --weight-column "PARAMETRIC(Pulsars)" logweight_total \
+    --weight-column-is-log "PARAMETRIC(Pulsars)" logweight_total \
+    --weight-column "NONPARAMETRIC(Pulsars)" logweight_total \
+    --weight-column-is-log "NONPARAMETRIC(Pulsars)" logweight_total \
     --include-neff \
-    --color PSR+GW+NICER r \
-    --color PSR+GW+NICER+NEW b \
-    --eos-column PSR+GW+NICER eos \
-    --eos-column PSR+GW+NICER+NEW eos \
-    --eos-dir PSR+GW+NICER $eos_dir \
-    --eos-dir PSR+GW+NICER+NEW $eos_dir \
-    --eos-num-per-dir PSR+GW+NICER 1000 \
-    --eos-num-per-dir PSR+GW+NICER+NEW 1000 \
-    --eos-basename PSR+GW+NICER 'eos-draw-%(draw)06d.csv' \
-    --eos-basename PSR+GW+NICER+NEW 'eos-draw-%(draw)06d.csv' \
+    --color "PARAMETRIC(Pulsars)" b \
+    --eos-column "PARAMETRIC(Pulsars)" eos \
+    --eos-dir "PARAMETRIC(Pulsars)" $eos_dir \
+    --eos-num-per-dir "PARAMETRIC(Pulsars)" 200 \
+    --eos-basename "PARAMETRIC(Pulsars)" 'eos-draw-%(draw)06d.csv' \
+    --color "NONPARAMETRIC(Pulsars)" r \
+    --eos-column "NONPARAMETRIC(Pulsars)" eos \
+    --eos-dir "NONPARAMETRIC(Pulsars)" $eos_dir_nonpar \
+    --eos-num-per-dir "NONPARAMETRIC(Pulsars)" 1000 \
+    --eos-basename "NONPARAMETRIC(Pulsars)" 'eos-draw-%(draw)06d.csv' \
     --num-points 50 \
     --quantile 0.05 --quantile 0.25 \
+    --legend \
+    --output-dir $POST_DIR \
+    --figwidth 12 \
+    --figheight 8 \
     --Verbose
