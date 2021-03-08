@@ -1,0 +1,61 @@
+#!/bin/bash
+
+### make plots of nuclear parameters alongside EoS params and macroscopic observables
+
+# E_beta,E_PNM,x,S0,L,Ksym,eps_total,eps_electron,mu_electron,EoS,Mmax,numbranches,logweight_NICER,logweight_GW170817,logweight_GW190425,logweight_J0348,logweight_J0740,logweight_J1614,pressurec2(baryon_density=1.4e+14),pressurec2(baryon_density=2.8e+14),pressurec2(baryon_density=4.2e+14),pressurec2(baryon_density=5.6e+14),pressurec2(baryon_density=8.4e+14),pressurec2(baryon_density=1.12e+15),energy_densityc2(baryon_density=1.4e+14),energy_densityc2(baryon_density=2.8e+14),energy_densityc2(baryon_density=4.2e+14),energy_densityc2(baryon_density=5.6e+14),energy_densityc2(baryon_density=8.4e+14),energy_densityc2(baryon_density=1.12e+15),R(M=1.4),R(M=1.6),Lambda(M=1.4),Lambda(M=1.6)
+
+#-------------------------------------------------
+
+NUM_POINTS=101
+MAX_NUM_SAMPLES=100000
+
+#---
+
+# plot different posteriors for the same set of prior draws
+TAGS="/home/philippe.landry/nseos/eos/gp/mrgagn/"
+
+for TAG in $TAGS
+do
+
+    echo "----------"
+    echo "processing $TAG"
+    echo "----------"
+    # Again this is silly but will make things easier
+    # This script should only be called by condor, and in particular with
+    # the submit file that requires you to be in the correct directory anways
+    # this shouldn't cause big problems for now
+    cd ../..
+    MAIN_DIR=$(pwd)
+    cd Utils/Plotting
+    
+    NEW="/home/isaac.legred/ParametricPlotting/corrected_parametric_post.csv"
+    ORIGINAL="/home/isaac.legred/ParametricPlotting/corrected_original_post.csv "
+    
+    kde-corner-samples \
+        Mmax 'R(M=1.4)'  \
+        --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
+        --column-range Mmax 1.90 3.0 \
+        --column-bandwidth Mmax 0.03 \
+        --column-label 'R(M=1.4)' '$R_{1.4}\ [\mathrm{km}]$' \
+        --column-range 'R(M=1.4)' 8.0 17.0 \
+        --column-bandwidth 'R(M=1.4)' 0.07 \
+        -s NPPRIOR $ORIGINAL \
+        --color NPPRIOR r \
+        -s PARPRIOR $INPATH \
+        --color PARPRIOR g \
+        --output-dir "/home/isaac.legred/ParametricPlotting/" \
+        --tag "covariates-single_event_M-R" \
+        --num-proc 50 \
+        --num-points $NUM_POINTS \
+        --level 0.5 --level 0.9 \
+        --legend \
+        --include-neff \
+        --grid \
+        --rotate-xticklabels 90 \
+        --figwidth 15 \
+        --figheight 15 \
+        --Verbose \
+        --no-scatter \
+        --Verbose \
+        
+done
