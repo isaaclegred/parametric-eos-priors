@@ -12,6 +12,8 @@ MAX_NUM_SAMPLES=100000
 #---
 
 # plot different posteriors for the same set of prior draws
+# this is irrelevant, at this point all of the
+# data is already collated, just need one tag value
 TAGS="/home/philippe.landry/nseos/eos/gp/mrgagn/"
 
 for TAG in $TAGS
@@ -28,8 +30,8 @@ do
     MAIN_DIR=$(pwd)
     cd Utils/Plotting
     
-    NEW="/home/isaac.legred/ParametricPlotting/corrected_parametric_post.csv"
-    ORIGINAL="/home/isaac.legred/ParametricPlotting/corrected_original_post.csv "
+    NEW=$MAIN_DIR"/corrected_parametric_post.csv"
+    ORIGINAL=$MAIN_DIR"/corrected_original_post.csv "
     
     kde-corner-samples \
         Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
