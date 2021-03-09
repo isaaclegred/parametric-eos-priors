@@ -19,35 +19,58 @@ M_sun_si = const.M_sun.si.value
 # PARAMETRIC EOS
 # Model of equation of state prior to sample from: 
 # Need to sample gamma0, gamma1, gamma2, gamma3
-# From the Carney, Wade, Irwin paper (I don't actually )
+# See https://arxiv.org/pdf/1805.11217.pdf for an introdcution
 
+
+# Legacy support, should be removed at some point
 p_range = (1e31, 1e37)
 p_0 = 3.9e32
 
+# This is the prior used in the introductory paper above
 gamma0_range = (0.2, 2.0)
 gamma1_range = (-.6, 1.7)
 gamma2_range = (-.6, .6)
 gamma3_range = (-.02, .02)
 
+
+# This is the preimage of the prior
+# used in https://arxiv.org/pdf/2001.01747.pdf,
+# it gets mapped to a relevant range of gammas
 r0_range = (-4.37722, 4.91227)
 r1_range = (-1.82240, 2.06387)
 r2_range = (-.32445, .36469)
 r3_range = (-.09529, .11046)
 
-parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
-parser.add_argument("--num-draws", type=int, dest="num_draws")
-parser.add_argument("--dir-index", type=int, dest="dir_index")
-# need
 
+# This maps r's drawn from distributions (such
+# as a distributioon with the values above as uniform
+# bounds) and returns values of gammma which are more
+# likely physical.  This mapping may also be inducing
+# correlations in the priors; need to investigate further.
 def map_rs_to_gammas(r0, r1, r2, r3):
     S = np.matrix([[.43801, -0.53573, +0.52661, -0.49379],
                    [-0.76705, +0.17169, +0.31255, -0.53336],
                    [+0.45143, 0.67967, -0.19454, -0.54443],
                    [+0.12646, 0.47070, 0.76626, 0.41868]])
     mu_r = np.matrix([[0.89421],[0.33878],[-0.07894],[+0.00393]])
-    sigma_r = np.matrix([[0.35700,0,0,0],[0,0.25769,0,0],[0,0,0.05452,0],[0,0,0,0.00312]])
+    Sigma_r = np.matrix([[0.35700,0,0,0],[0,0.25769,0,0],[0,0,0.05452,0],[0,0,0,0.00312]])
     rs = np.matrix([[r0],[r1], [r2], [r3]])
     return sigma_r * S**(-1) * rs  + mu_r
+
+
+
+
+
+# This can be called as a script, in that case it produces a single "draw file" which contains
+# a tabulated eos of (pressure, energy density, baryon density)
+parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
+parser.add_argument("--num-draws", type=int, dest="num_draws")
+parser.add_argument("--dir-index", type=int, dest="dir_index")
+
+
+# This class is meant to hose all of the functions needed to interact with a
+# paramaterized eos, without actually exposing the client to any of the lalsimulation
+# functions (which can be somewhat volatile and don't come with object orientation)
 class eos_spectral:
     def __init__(self,gamma0, gamma1, gamma2, gamma3):
         self.gamma0 = gamma0
@@ -77,6 +100,8 @@ class eos_spectral:
         else:
             eps = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(p, self.eos)
         return eps
+    # Evaluate the phi parameter as used in the non-parametric papers,
+    # Not currently used
     def eval_phi(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
             eps = np.zeros(len(p))  
@@ -85,6 +110,7 @@ class eos_spectral:
         else:
              eps = lalsim.SimNeutronStarEOSEnergyDensityDerivOfPressure(p, self.eos)
         return eps
+    # Evaluate the baryon density at a particular pressure
     def eval_baryon_density(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
             rho = np.zeros(len(p))  
@@ -95,7 +121,7 @@ class eos_spectral:
             rho  = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
                 lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p,self.eos), self.eos) 
         return rho
-
+    # Evluate the speed of sound at a particular pressure
     def eval_speed_of_sound(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):
             cs = np.zeros(len(p))
@@ -109,6 +135,7 @@ class eos_spectral:
         else:
             cs  = lalsim.SimNeutronStarEOSSpeedOfSound(p, self.eos)
         return cs
+    #Evaluate the exponent polytope (I don't really know if this works, wouldn't recommend using)
     def eval_Gamma(self, p):
         x = np.log( p/p_0)
         return np.exp(self.gamma0 + self.gamma1 * x + self.gamma2 * x**2 + self.gamma3 * x**3 )
@@ -122,16 +149,21 @@ class eos_spectral:
         return cs_max < c_si*1.1
     def get_max_M(self):
         return lalsim.SimNeutronStarMaximumMass(self.family)/lal.MSUN_SI 
-
+    # This function claims to check to see if the adiabatic exponent is bounded in the
+    # range [.6, 4.5], it only works as well as the function which evaluates the gamma
     def is_confined(self, ps):
         if (.6 < self.eval_Gamma(ps).all() < 4.5):
             return True
+        
+############################################################
+# Implemented Priors         
+############################################################             
 
-             
-
-# We also need gamma1 > gamma2 > gamma3 ? and thermodynamic stability? , so I guess we sample gamma1 first 
-# and then constrain the others based on this. This is the (somewhat) uniform prior on the gamma's, I think
-# I still need to glue together the 
+# Draws froam a uniform distribution, with the bounds as provided
+# in the intro paper, basically useless because of a feature (bug)?
+# in lalsim that causes a segfault if parameters produce an EOS
+# with insufficient points to do the TOV integration.  So any code that
+# runs this function is liable to fail catastrophically
 def get_eos_realization_uniform_spec (gamma0_range = gamma0_range,
                                       gamma1_range= gamma1_range,
                                       gamma2_range=gamma2_range, 
@@ -153,10 +185,14 @@ def get_eos_realization_uniform_spec (gamma0_range = gamma0_range,
                                       gamma2_range=gamma2_range, 
                                       gamma3_range = gamma3_range)
         
- # The first prior was not great, most of the EOS's couldn't even 
- # support a 1.4 solar mass neutron star (it really helps to enforce)
- # the criteria ahead of time
-# Enforce conditions ahead of time
+
+# This is something of a wrapper of the lalinference
+# function which checks to see if a particular combo
+# of parameters will (1) create an EOS which can be used
+# to successfully integrate TOV, and (2) create a physically
+# plausible solution (perhaps the checks could be relaxed
+# to expand the prior but its not really possible to dispense
+# with it completely)
 def criteria(gamma0, gamma1, gamma2, gamma3):
     vars = lalinf.Variables()
     no_vary = lalinf.lalinference.LALINFERENCE_PARAM_FIXED
@@ -175,7 +211,9 @@ def criteria(gamma0, gamma1, gamma2, gamma3):
     else :
         return False
 # Get an EOS sampled from a uniform prior that is supposed to 
-# satisy the criteria
+# satisy the criteria, this is also fairly useless because
+# most draws are not physical, so it takes an incredibly long
+# time to get a sizeable sample of reasonable EOSs
 def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                   gamma1_range= gamma1_range,
                                                   gamma2_range=gamma2_range,
@@ -202,15 +240,13 @@ def get_eos_realization_uniform_constrained_spec (gamma0_range = gamma0_range,
                                                             gamma1_range= gamma1_range,
                                                             gamma2_range=gamma2_range,
                                                             gamma3_range = gamma3_range)
-    
-    # Might want this condition at some point
-    #and this_polytrope.is_M_big_enough()
     return this_polytrope
     
-# Because we have an analytic equation of state, we can compute the derivative dmu/dp 
-# analytically.  Therefore we can compute phi analytically (Doesn't seem to actually be necessary)
 
 # Inspired by  https://arxiv.org/pdf/2001.01747.pdf appendix B, see there for help
+# This prior uses a separate domain which gets mapped into gamma-space, in doing this
+# it targets the most viable regions of parameter space, it is the de facto best choice
+# for sampling
 def get_eos_realization_mapped_constrained_spec (r0_range = r0_range,
                                                  r1_range= r1_range,
                                                  r2_range= r2_range,

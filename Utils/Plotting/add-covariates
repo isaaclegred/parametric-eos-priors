@@ -5,11 +5,17 @@ MAX_NUM_SAMPLES=100000
 #Sometimes need this
 # --copy-column  "logweight_Romani_J1810" 
 
-### add pressures, macroscopic values to CSV
 
+# These should be the only things that *need* to change
 NONPAR_EOS_DIR="/home/philippe.landry/gpr-eos-stacking/EoS/mrgagn"
-PARAMETRIC_EOS_DIR="/home/isaac.legred/parametric-eos-priors/production_eos_draw_spectral/"
-#This is kinda a silly thing to do, but it will work for nowTAGS="corrected_nonparametric_post.csv corrected_parametric_post.csv"
+PARAMETRIC_EOS_DIR="/home/isaac.legred/parametric-eos-priors/good_gaussian_eos_draw_spectral/"
+EOS_PER_DIR="1000 100"
+
+# This may need to change if you change the overall convention
+TAGS="/corrected_nonparametric_post.csv /corrected_parametric_post.csv"
+# This is kinda a silly thing to do, but it will work for now
+# Hardcode this if it's easier than worrying about where
+# you call functions from
 cd ../..
 POST_DIR_5=$(pwd)
 cd Utils/Plotting
@@ -36,9 +42,8 @@ cd Utils/Plotting
 #TAGS="$TAGS mrgagn-ingo-bps-1e10"
 
 
-TAGS="corrected_nonparametric_post.csv corrected_parametric_post.csv"
+
 EOS_DIR_TAGS="$NONPAR_EOS_DIR $PARAMETRIC_EOS_DIR"
-EOS_PER_DIR="1000 200"
 EOS_COUNT_ARR=($EOS_PER_DIR)
 counter=0
 for TAG in $TAGS
