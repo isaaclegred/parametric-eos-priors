@@ -53,7 +53,7 @@ def map_rs_to_gammas(r0, r1, r2, r3):
                    [+0.45143, 0.67967, -0.19454, -0.54443],
                    [+0.12646, 0.47070, 0.76626, 0.41868]])
     mu_r = np.matrix([[0.89421],[0.33878],[-0.07894],[+0.00393]])
-    Sigma_r = np.matrix([[0.35700,0,0,0],[0,0.25769,0,0],[0,0,0.05452,0],[0,0,0,0.00312]])
+    sigma_r = np.matrix([[0.35700,0,0,0],[0,0.25769,0,0],[0,0,0.05452,0],[0,0,0,0.00312]])
     rs = np.matrix([[r0],[r1], [r2], [r3]])
     return sigma_r * S**(-1) * rs  + mu_r
 
@@ -261,7 +261,6 @@ def get_eos_realization_mapped_constrained_spec (r0_range = r0_range,
     gamma1 = gammas[1,0]
     gamma2 = gammas[2,0]
     gamma3 = gammas[3,0]
-    print(gamma0, gamma1, gamma2, gamma3)
     failure = False
     try :
         if not criteria(gamma0, gamma1, gamma2, gamma3):
@@ -281,6 +280,7 @@ def get_eos_realization_mapped_constrained_spec (r0_range = r0_range,
                                                             r1_range= r1_range,
                                                             r2_range= r2_range,
                                                             r3_range = r3_range)
+    print(gamma0, gamma1, gamma2, gamma3)
     return this_polytrope
 
 
@@ -292,9 +292,8 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
                                                  r3_range = r3_range):
     ################################################################
     ranges= [r0_range, r1_range, r2_range, r3_range]
-    # Do something cleverer here
     means = [np.mean(this_range) for this_range in ranges]
-    cov = 1/3*np.diag([np.std(this_range) for this_range in ranges])
+    cov = 1/4*np.diag([np.std(this_range) for this_range in ranges])
     [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov) 
     
     
@@ -306,7 +305,6 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
     gamma1 = gammas[1,0]
     gamma2 = gammas[2,0]
     gamma3 = gammas[3,0]
-    print(gamma0, gamma1, gamma2, gamma3)
     failure = False
     try :
         if not criteria(gamma0, gamma1, gamma2, gamma3):
@@ -325,6 +323,8 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
                                                             r1_range= r1_range,
                                                             r2_range= r2_range,
                                                             r3_range = r3_range)
+    # This is a lot of printing, but makes it possible to diagnose the prior more easily
+    print(gamma0, gamma1, gamma2, gamma3)
     return this_polytrope
 
 
