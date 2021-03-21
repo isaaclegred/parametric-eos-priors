@@ -168,8 +168,7 @@ def get_eos_realization_uniform_spec (gamma0_range = gamma0_range,
                                       gamma1_range= gamma1_range,
                                       gamma2_range=gamma2_range, 
                                       gamma3_range = gamma3_range):
-    # There's some problem with configurations not working if the parameters are too close together,
-    # so I tried to force them apart without losing too much of the prior
+    # There's some problem with configurations not working if the parameters are too close together
     gamma0 = np.random.uniform(*gamma0_range)
     gamma1 = np.random.uniform(*gamma1_range)
     gamma2 = np.random.uniform(*gamma2_range)

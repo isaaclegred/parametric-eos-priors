@@ -31,7 +31,7 @@ do
     cd Utils/Plotting
     
     NEW=$MAIN_DIR"/corrected_parametric_post.csv"
-    ORIGINAL=$MAIN_DIR"/corrected_original_post.csv "
+    ORIGINAL=$MAIN_DIR"/corrected_nonparametric_post.csv "
     
     kde-corner-samples \
         Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
@@ -58,14 +58,14 @@ do
         --weight-column-is-log PARAMETRIC logweight_total \
         -s NPPRIOR $ORIGINAL \
         --color NPPRIOR r \
-        -s PARPRIOR $INPATH \
+        -s PARPRIOR $NEW \
         --color PARPRIOR g \
         -s NONPARAMETRIC $ORIGINAL \
         --color NONPARAMETRIC orange \
         --weight-column NONPARAMETRIC logweight_total \
         --weight-column-is-log NONPARAMETRIC logweight_total \
-        --output-dir "/home/isaac.legred/ParametricPlotting/" \
-        --tag "covariates-new_event-original_and_prior_right" \
+        --output-dir $MAIN_DIR \
+        --tag "covariates-parametric_nonparametric_with_priors" \
         --num-proc 50 \
         --num-points $NUM_POINTS \
         --level 0.5 --level 0.9 \

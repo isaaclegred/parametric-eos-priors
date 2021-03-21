@@ -2,9 +2,9 @@
 dir_index=$1
 dirs_to_make=$2
 eos_per_dir=$3
+eos_dir_name=$4
 
 ((min_index=dir_index*dirs_to_make))
-eos_dir_name="gaussian_half_sigma_eos_draw_spectral"
 ((max_index=min_index + dirs_to_make - 1))
 
 mkdir $eos_dir_name

@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./normalize_by_prior.sh
+Arguments  =
+Log        = ./run_normalize/normalize.log
+Output     = ./run_normalize/normalize.out
+Error      = ./run_normalize/normalize.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1
