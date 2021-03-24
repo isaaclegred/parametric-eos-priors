@@ -38,7 +38,6 @@ class eos_polytrope:
                                                             self.gamma1, 
                                                             self.gamma2, 
                                                             self.gamma3)
-        print(logp1, gamma1, gamma2, gamma3)
         self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
     # Get the eos family from the paramaters. 
     def get_eos(self):

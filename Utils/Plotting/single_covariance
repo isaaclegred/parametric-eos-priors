@@ -28,23 +28,23 @@ do
     MAIN_DIR=$(pwd)
     cd Utils/Plotting
     
-    NEW="/home/isaac.legred/ParametricPlotting/corrected_parametric_post.csv"
-    ORIGINAL="/home/isaac.legred/ParametricPlotting/corrected_original_post.csv "
+    NEW=$MAIN_DIR"/corrected_parametric_post.csv"
+    ORIGINAL=$MAIN_DIR"/corrected_nonparametric_post.csv "
     
     kde-corner-samples \
-        Mmax 'R(M=1.4)'  \
-        --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
-        --column-range Mmax 1.90 3.0 \
-        --column-bandwidth Mmax 0.03 \
+        'Lambda(M=1.4)' 'R(M=1.4)'  \
+        --column-label 'Lambda(M=1.4)' '$\Lambda_{1.4}$' \
+        --column-range 'Lambda(M=1.4)' 10 2000 \
+        --column-bandwidth 'Lambda(M=1.4)' 40 \
         --column-label 'R(M=1.4)' '$R_{1.4}\ [\mathrm{km}]$' \
         --column-range 'R(M=1.4)' 8.0 17.0 \
         --column-bandwidth 'R(M=1.4)' 0.07 \
         -s NPPRIOR $ORIGINAL \
         --color NPPRIOR r \
-        -s PARPRIOR $INPATH \
+        -s PARPRIOR $NEW \
         --color PARPRIOR g \
-        --output-dir "/home/isaac.legred/ParametricPlotting/" \
-        --tag "covariates-single_event_M-R" \
+        --output-dir $MAIN_DIR \
+        --tag "covariates-overlayed_ROFLAMBDA" \
         --num-proc 50 \
         --num-points $NUM_POINTS \
         --level 0.5 --level 0.9 \
@@ -56,6 +56,10 @@ do
         --figheight 15 \
         --Verbose \
         --no-scatter \
+        --reference '$R_{1.4}(\Lambda_{1.4})$(YY)' $MAIN_DIR"/corrected_parametric_postROFLAMBDA.csv" \
+        --reference '$R_{1.4}(\Lambda_{1.4})$(POST170817)' $MAIN_DIR"/corrected_parametric_postROFLAMBDACCHYY.csv" \
+        --reference-color '$R_{1.4}(\Lambda_{1.4})$(POST170817)' 'k' \
+        --reference-legend \
         --Verbose \
         
 done

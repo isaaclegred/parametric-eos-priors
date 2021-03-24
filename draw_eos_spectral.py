@@ -83,7 +83,7 @@ class eos_spectral:
             self.gamma1, 
             self.gamma2, 
             self.gamma3)
-        print(gamma0, gamma1, gamma2, gamma3)
+
         self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
         
     # Get the eos family from the paramaters. 
@@ -292,7 +292,7 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
     ################################################################
     ranges= [r0_range, r1_range, r2_range, r3_range]
     means = [np.mean(this_range) for this_range in ranges]
-    cov = 1/4*np.diag([np.std(this_range) for this_range in ranges])
+    cov = 1/6*np.diag([np.std(this_range) for this_range in ranges])
     [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov) 
     
     
@@ -309,7 +309,7 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
         if not criteria(gamma0, gamma1, gamma2, gamma3):
             failure = True
         this_polytrope = eos_spectral(gamma0, gamma1, gamma2, gamma3)
-        if 3 < this_polytrope.get_max_M() or 1.7 > this_polytrope.get_max_M():
+        if 3 < this_polytrope.get_max_M() or 1.9 > this_polytrope.get_max_M():
             failure = True
     except :
         # Try again

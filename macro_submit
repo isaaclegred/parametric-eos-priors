@@ -2,13 +2,13 @@
 
 Universe   = vanilla
 Executable = ./macrofy.sh
-Arguments  = "$(Process) 10 0 '/home/isaac.legred/parametric-eos-priors/gaussian_half_sigma_eos_draw_spectral/' 100"
+Arguments  = "$(Process) 10 0 '/home/isaac.legred/parametric-eos-priors/root_six_gaussian_eos_draw_spectral' 100"
 Log        = macro.log
 Output     = macro.out
 Error      = macro.error
 getenv = True
 accounting_group = ligo.dev.o3.cbc.pe.lalinference
 accounting_group_user = isaac.legred
-queue 100
+queue 200
 
 
