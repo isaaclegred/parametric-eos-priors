@@ -135,6 +135,48 @@ def get_eos_realization_uniform_constrained_poly (logp1_range = logp1_range,
         return get_eos_realization_uniform_constrained_poly(logp1_range = logp1_range,
                                                             gamma1_range= gamma1_range,
                                       gamma2_range=gamma2_range, gamma3_range = gamma3_range)
+
+
+
+def get_eos_realization_gaussian_constrained_poly (logp1_range = logp1_range,
+                                              gamma1_range= gamma1_range,
+                                              gamma2_range=gamma2_range,
+                                              gamma3_range = gamma3_range):
+    ################################################################
+    ranges= [logp1_range, gamma1_range, gamma2_range, gamma3_range]
+    means = [np.mean(this_range) for this_range in ranges]
+    cov = 1/6*np.diag([np.std(this_range) for this_range in ranges])
+    [logp1, gamma1, gamma2, gamma3] = np.random.multivariate_normal(means, cov) 
+    
+    
+
+    
+    ################################################################
+    failure = False
+    try :
+        if not criteria(logp1, gamma1, gamma2, gamma3):
+            failure = True
+        this_polytrope = eos_polytrope(logp1, gamma1, gamma2, gamma3)
+        if 3 < this_polytrope.get_max_M() or 1.9 > this_polytrope.get_max_M():
+            failure = True
+    except :
+        # Try again
+        return get_eos_realization_gaussian_constrained_poly(logp1_range = logp1_range,
+                                                             gamma1_range= gamma1_range,
+                                                             gamma2_range=gamma2_range,
+                                                             gamma3_range = gamma3_range)
+    if failure:
+        return get_eos_realization_gaussian_constrained_poly(logp1_range = logp1_range,
+                                                             gamma1_range= gamma1_range,
+                                                             gamma2_range=gamma2_range,
+                                                             gamma3_range = gamma3_range)
+        # This is a lot of printing, but makes it possible to diagnose the prior more easily
+    print(logp1, gamma1, gamma2, gamma3)
+    return this_polytrope
+
+
+
+
     
 # Because we have an analytic equation of state, we can compute the derivative dmu/dp 
 # analytically.  Therefore we can compute phi analytically (Doesn't seem to actually be necessary)
@@ -154,10 +196,10 @@ sly_polytrope_model = eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
  
 def create_eos_draw_file(name):
-    eos_poly = get_eos_realization_uniform_constrained_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
+    eos_poly = get_eos_realization_gaussian_constrained_poly(logp1_range, gamma1_range, gamma2_range, gamma3_range)
     # FIXME WORRY ABOUT CGS VS SI!!!!! (UPDATE : Everything is in SI till the last step :/ ) 
-    p_small = np.linspace(1.0e12, 1.3e30, 600)
-    p_main = np.geomspace (1.3e30, 9.0e36, 700)
+    p_small = np.linspace(1.0e12, 1.3e32, 600)
+    p_main = np.geomspace (1.3e32, 9.0e36, 700)
     eps_small=  eos_poly.eval_energy_density(p_small)
     eps_main = eos_poly.eval_energy_density(p_main)
     rho_b_small = eos_poly.eval_baryon_density(p_small)
