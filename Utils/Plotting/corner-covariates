@@ -34,7 +34,7 @@ do
     ORIGINAL=$MAIN_DIR"/corrected_nonparametric_post.csv "
     
     kde-corner-samples \
-        Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
+        Mmax 'R(M=1.4)' 'Lambda(M=1.4)' 'pressurec2(baryon_density=4.8e+14)' 'pressurec2(baryon_density=1.44e+15)' \
         --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
         --column-range Mmax 1.90 3.0 \
         --column-bandwidth Mmax 0.01 \

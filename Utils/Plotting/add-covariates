@@ -65,13 +65,13 @@ do
         --eos-dir ${EOS_DIR} \
         --eos-num-per-dir ${EOS_NUM_PER_DIR} \
         --eos-basename 'eos-draw-%(draw)06d.csv' \
-        --reference-value 1.4e14 \
-        --reference-value 2.8e14 \
-        --reference-value 4.2e14 \
-        --reference-value 5.6e14 \
-        --reference-value 8.4e14 \
-        --reference-value 11.2e14 \
-        --reference-value 16.8e14 \
+        --reference-value 1.2e14 \
+        --reference-value 2.4e14 \
+        --reference-value 3.6e14 \
+        --reference-value 4.8e14 \
+        --reference-value 7.2e14 \
+        --reference-value 1.44e15 \
+        --reference-value 1.92e15 \
         --max-num-samples $MAX_NUM_SAMPLES \
         --Verbose
 
@@ -107,19 +107,17 @@ do
         --copy-column  "logweight_Miller_J0030_threespot" \
         --copy-column  "logweight_Cromartie_J0740" \
         --copy-column  "logweight_total" \
-        --copy-column  "pressurec2(baryon_density=1.4e+14)" \
-        --copy-column  "pressurec2(baryon_density=2.8e+14)" \
-        --copy-column  "pressurec2(baryon_density=4.2e+14)" \
-        --copy-column  "pressurec2(baryon_density=5.6e+14)" \
-        --copy-column  "pressurec2(baryon_density=8.4e+14)" \
-        --copy-column  "pressurec2(baryon_density=1.12e+15)" \
+        --copy-column  "pressurec2(baryon_density=2.4e+14)" \
+        --copy-column  "pressurec2(baryon_density=3.6e+14)" \
+        --copy-column  "pressurec2(baryon_density=4.8e+14)" \
+        --copy-column  "pressurec2(baryon_density=7.2e+14)" \
+        --copy-column  "pressurec2(baryon_density=1.44e+15)" \
         --copy-column  "pressurec2(baryon_density=1.68e+15)" \
-        --copy-column  "energy_densityc2(baryon_density=1.4e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=2.8e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=4.2e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=5.6e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=8.4e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=1.12e+15)" \
+        --copy-column  "energy_densityc2(baryon_density=2.4e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=3.6e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=4.8e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=7.2e+14)" \
+        --copy-column  "energy_densityc2(baryon_density=1.44e+14)" \
         --copy-column  "energy_densityc2(baryon_density=1.68e+15)" \
         --copy-column  "R(M=1.0)" \
         --copy-column  "R(M=1.2)" \
