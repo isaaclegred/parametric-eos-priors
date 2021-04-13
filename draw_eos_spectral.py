@@ -66,7 +66,7 @@ def map_rs_to_gammas(r0, r1, r2, r3):
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
-
+parser.add_argument("--prior-tag", type=str, dest="prior_tag", default="uniform")
 
 # This class is meant to hose all of the functions needed to interact with a
 # paramaterized eos, without actually exposing the client to any of the lalsimulation
@@ -345,11 +345,30 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
 sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
 
 
+def get_draw_function_from_tag(prior_tag):
+    if prior_tag == "uniform":
+        return get_eos_realization_mapped_constrained_spec
+    elif prior_tag == "Uniform":
+        return get_eos_realization_mapped_constrained_spec
+    elif prior_tag == "gaussian":
+        return get_eos_realization_mapped_gaussian_constrained_spec
+    elif prior_tag == "Gaussian":
+        return get_eos_realization_mapped_gaussian_constrained_spec
+    elif prior_tag == "unconstrained":
+        print("you're nuts")
+        return get_eos_realization_uniform_constrained_spec
+    elif prior_tag == "Unconstrained":
+        print("you're nuts")
+        return get_eos_realization_uniform_constrained_spec
+    else:
+        print("couldn't identify the piecewise prior tag,  /n using the uniform prior")
+        return get_eos_realization_mapped_constrained_spec
+
 
  
-def create_eos_draw_file(name):
+def create_eos_draw_file(name, draw_function):
     print(name)
-    eos_poly = get_eos_realization_mapped_gaussian_constrained_spec(r0_range, r1_range, r2_range, r3_range)
+    eos_poly = draw_function(r0_range, r1_range, r2_range, r3_range)
     if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
         p_small = np.linspace(1.0e12, 1.3e30, 300)
@@ -371,6 +390,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     num_draws = args.num_draws
     dir_index = args.dir_index
+    prior_tag = args.prior_tag
     for i in range(num_draws):
         name = "eos-draw-" + "%06d" %(dir_index*num_draws + i) + ".csv"
-        create_eos_draw_file(name)
+        create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))
