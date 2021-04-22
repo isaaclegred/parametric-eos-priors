@@ -2,7 +2,7 @@
 
 Universe   = vanilla
 Executable = ./make_eos_draws_piecewise.sh
-Arguments  = "$(Process) 10 100 'gaussian_sqrt_6_eos_draw_piecewise'"
+Arguments  = "$(Process) 10 100 'production_eos_draw_piecewise'"
 Log        = ./run_piecewise/make_eos_draws.log
 Output     = ./run_piecewise/make_eos_draws.out
 Error      = ./run_piecewise/make_eos_draws.error

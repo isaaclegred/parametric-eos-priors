@@ -17,4 +17,5 @@
 *.csv
 
 #Ignore run directories
+
 *run*

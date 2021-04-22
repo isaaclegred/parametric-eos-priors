@@ -213,11 +213,10 @@ def get_draw_function_from_tag(prior_tag):
         print("you're nuts")
         return get_eos_realization_uniform_poly
     else:
-        print("couldn't identify the piecewise prior tag,  /n using the uniform prior")
+        print("couldn't identify the piecewise prior tag, using the uniform prior")
         return get_eos_realization_uniform_constrained_poly
         
 def create_eos_draw_file(name, draw_function):
-    eos_poly = draw_function(logp1_range, gamma1_range, gamma2_range, gamma3_range)
     # FIXME WORRY ABOUT CGS VS SI!!!!! (UPDATE : Everything is in SI till the last step :/ ) 
     p_small = np.linspace(1.0e12, 1.3e32, 600)
     p_main = np.geomspace (1.3e32, 9.0e36, 700)
