@@ -5,6 +5,8 @@ import lalsimulation as lalsim
 import lal
 import lalinference as lalinf
 import argparse
+import matplotlib as mpl
+mpl.use("agg")
 from matplotlib import pyplot as plt
 import astropy.constants as const
 import astropy.units as u
@@ -63,6 +65,19 @@ class eos_polytrope:
         else:
              eps = lalsim.SimNeutronStarEOSEnergyDensityDerivOfPressure(p, self.eos)
         return eps
+    def eval_speed_of_sound(self, p):
+        if isinstance(p, list) or isinstance(p, np.ndarray):
+            cs = np.zeros(len(p))
+            for i, pres in enumerate(p):
+                try:
+                    h = lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(pres, self.eos)
+                    cs[i] = lalsim.SimNeutronStarEOSSpeedOfSound(h, self.eos)
+                except:
+                    print(pres, "failed to produce a valid sound speed")
+                    break
+        else:
+            cs  = lalsim.SimNeutronStarEOSSpeedOfSound(p, self.eos)
+        return cs
     def eval_baryon_density(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    
             rho = np.zeros(len(p))  

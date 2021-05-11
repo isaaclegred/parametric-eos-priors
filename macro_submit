@@ -1,7 +1,7 @@
 
 
 Universe   = vanilla
-Executable = ./macrofy.sh
+Executable = ./bin/macrofy.sh
 Arguments  = "$(Process) 1 0 '/home/isaac.legred/ExtremalEOS/extremal_eos_draw' 20"
 Log        = macro.log
 Output     = macro.out

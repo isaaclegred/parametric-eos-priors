@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./add_cs2_to_eos_dir.sh
+Arguments  =
+Log        = ./run_cs2/cs2.log
+Output     = ./run_cs2/cs2.out
+Error      = ./run_cs2/cs2.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

@@ -26,6 +26,7 @@ do
     # This script should only be called by condor, and in particular with
     # the submit file that requires you to be in the correct directory anways
     # this shouldn't cause big problems for now
+
     cd ../..
     MAIN_DIR=$(pwd)
     cd Utils/Plotting

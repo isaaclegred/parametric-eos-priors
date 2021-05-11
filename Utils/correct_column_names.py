@@ -39,7 +39,8 @@ for index in range(1, num_weights+1):
         new_header += "logweight_Cromartie_J0740,"
     if "Romani_J1810" in current_event:
         new_header += "logweight_Romani_J1810,"
-        
+    if "Amsterdam_J0740" in current_event:
+        new_header += "logweight_Amsterdam_J0740,"        
 if new_header[-1] == ",":
     new_header = new_header[:-1]
 

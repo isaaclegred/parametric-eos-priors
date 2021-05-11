@@ -2,10 +2,13 @@
 import numpy as np
 import draw_eos_piecewise as pyeos
 import scipy.interpolate as interp
+import scipy.optimize as optimize
+import scipy.integtate as integrate
 import lalsimulation as lalsim
 import lalinference as lalinf
 import lal
 import argparse
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 import astropy.constants as const
 import astropy.units as u
@@ -31,11 +34,11 @@ p_0 = 3.9e32
 # What to put here?
 rho_0 = 2.4e14 # g/cm**3
 
-a1_range=
-a2_range=
-a3_range=
-a4_range=
-a5_range=
+a1_range=(.1, 1.5)
+a2_range=(1.5, 12)
+a3_range=(.05, 2)
+a4_range=(1.5, 37)
+a5_range=(.1, 1)
 #a6 is special
 #a6_range=
 
@@ -44,48 +47,61 @@ a5_range=
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
 parser.add_argument("--num-draws", type=int, dest="num_draws")
 parser.add_argument("--dir-index", type=int, dest="dir_index")
-def get_cs2(a1, a2, a3, a4, a5, a6):
+sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
+sly_p_1 = 2.6e32 # SLy pressure at 2.4e17 kg/m^3, this is in SI (Pa)
+def get_cs2c2(a1, a2, a3, a4, a5, a6):
     fun = lambda x : a1*np.exp(-1/2*(x-a2)**2/a3**2) + a6 +(1/3 - a6)/(1 + e**(-a5(x-a4)))
     return fun
-def tabulate_values(eps_min, eps_max, cs_2):
+def tabulate_values(eps_min, eps_max, cs_2, p_min):
     # Find low density eos
     # they glue to a particular eos but I think it's better
     # to glue to SLy for consistency.  
     # Somehow need to know the value of a before this point?
+    eps_vals = np.linspace(eps_min, eps_max, 500)
+    def dp_and_rho(eps, p_and_rho):
+        p = p_and_rho[0]
+        rho = p_and_rho[1]
+        dp = cs_2(eps)
+        drho = rho/(eps + p)
+        return np.array([dp, drho])
+    integrate.solve_ivp(cs_2, eps_vals, p_min )
 # This class is meant to hose all of the functions needed to interact with a
 # paramaterized eos, without actually exposing the client to any of the lalsimulation
 # functions (which can be somewhat volatile and don't come with object orientation)
-sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
-sly_matching_eps = py_eos.
-class eos_speed_of_sound:
-    def __init__(self, a1, a2, a3, a4, a5, a6):
 
-        self.x = #eps/(m_N n_0)
+class eos_speed_of_sound:
+    def __init__(self, a1, a2, a3, a4, a5):
+
+        self.x =np.linspace(0,16,1000) #eps/(m_N n_0)
         self.a1 = a1
         self.a2 = a2
         self.a3 = a3
         self.a4 = a4
         self.a5 = a5
-        self.a6 = a6
+        self.sly_model= sly_polytrope_model
+        self.eps_of_p = None
+        self.rho_of_p = None
+        self.c2si = (3e8)**2
+        # need to find a6 by gluing, should have a procedure to do this right
+        # off the bat i think
+        self.a6  = compute_a6(self)
+        
+        self.cs2 = self.construc_cs2(self, self.a6)
+        p, eps, rho_b = tabulate_values(eps_min, eps_max, self.cs2)
+        
 
-        self.cs2 = get_cs2(self.a1, self.a2, self.a3, self.a4, self.a5 self.a6)
-        p, eps, rho_b = tabulate_values(eps_min, eps_max, cs2)
-        
-        self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
-        
-    # Get the eos family from the paramaters. 
-    def get_eos(self):
-        return self.eos
-    def get_fam(self):
-        return self.family
     # Evaluate the eos in terms of epsilon(p)
     def eval_energy_density(self, p):
+        if self.eps_of_p == None:
+            print("uff da")
+            #Interpolate a function
+            
         if isinstance(p, list) or isinstance(p, np.ndarray):    
             eps = np.zeros(len(p))  
             for i, pres in enumerate(p):
-                eps[i] = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(pres,self.eos)    
+                eps[i] =  1# Eval function, try to do our best to vectorize this before hand
         else:
-            eps = lalsim.SimNeutronStarEOSEnergyDensityOfPressure(p, self.eos)
+            eps = 1# Eval function 
         return eps
     # Evaluate the phi parameter as used in the non-parametric papers,
     # Not currently used
@@ -135,16 +151,31 @@ class eos_speed_of_sound:
         print("cs_max is", cs_max)
         return cs_max < c_si*1.1
     def get_max_M(self):
-        return lalsim.SimNeutronStarMaximumMass(self.family)/lal.MSUN_SI 
-    # This function claims to check to see if the adiabatic exponent is bounded in the
-    # range [.6, 4.5], it only works as well as the function which evaluates the gamma
-    def is_confined(self, ps):
-        if (.6 < self.eval_Gamma(ps).all() < 4.5):
-            return True
-        
-
-
-
+        return lalsim.SimNeutronStarMaximumMass(self.family)/lal.MSUN_SI
+    # thin wrapper around function that actually computes the thing (rename?)
+    def construct_cs2(self, a_6):
+        a1 = self.a1
+        a2 = self.a2,
+        a3 = self.a3
+        a4 = self.a4
+        a5 = self.a5
+        a6 = a_6
+        c2si = (3e8)**2
+        return c2si * get_cs2c2(a1, a2, a3, a4, a5, a6)
+            
+        return
+    def compute_a6(self):
+        # In the paper this is made to match some EFT, but here we want to match it to SLy to make
+        # it consistent at low denisites with the other EoSs
+        # Shoot for it?
+        to_match  = self.sly_model.eval_speed_of_sound(sly_p_1)
+        eps_match = self.sly_model.eval_energy_density(sly_p_1)
+        def diff(self, a_6_guess):
+            cs2_guess = construct_cs2(self, a_6_guess)
+            error = to_match - cs2_guess(eps_match)
+            return error
+        result = optimize.root_scalar(diff)
+        return result.root
  
 def create_eos_draw_file(name):
     print(name)

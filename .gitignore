@@ -19,3 +19,5 @@
 #Ignore run directories
 
 *run*
+# Ignore .pyc files
+*.pyc

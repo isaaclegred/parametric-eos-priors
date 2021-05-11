@@ -112,13 +112,13 @@ do
         --copy-column  "pressurec2(baryon_density=4.8e+14)" \
         --copy-column  "pressurec2(baryon_density=7.2e+14)" \
         --copy-column  "pressurec2(baryon_density=1.44e+15)" \
-        --copy-column  "pressurec2(baryon_density=1.68e+15)" \
+        --copy-column  "pressurec2(baryon_density=1.92e+15)" \
         --copy-column  "energy_densityc2(baryon_density=2.4e+14)" \
         --copy-column  "energy_densityc2(baryon_density=3.6e+14)" \
         --copy-column  "energy_densityc2(baryon_density=4.8e+14)" \
         --copy-column  "energy_densityc2(baryon_density=7.2e+14)" \
         --copy-column  "energy_densityc2(baryon_density=1.44e+14)" \
-        --copy-column  "energy_densityc2(baryon_density=1.68e+15)" \
+        --copy-column  "energy_densityc2(baryon_density=1.92e+15)" \
         --copy-column  "R(M=1.0)" \
         --copy-column  "R(M=1.2)" \
         --copy-column  "R(M=1.4)" \
