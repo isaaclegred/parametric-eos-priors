@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./add_num_branch.sh
+Arguments  = "$(Process)"
+Log        = ./run_branch/branch.log
+Output     = ./run_branch/branch.out
+Error      = ./run_branch/branch.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 5

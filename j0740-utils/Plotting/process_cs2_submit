@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./process_quantiles_cs2.sh
+Arguments  =
+Log        = ./run_process_cs2/process.log
+Output     = ./run_process_cs2/process.out
+Error      = ./run_process_cs2/process.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

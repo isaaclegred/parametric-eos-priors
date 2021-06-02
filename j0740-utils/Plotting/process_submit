@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./process_quantiles.sh
+Arguments  =
+Log        = ./run_process/process.log
+Output     = ./run_process/process.out
+Error      = ./run_process/process.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

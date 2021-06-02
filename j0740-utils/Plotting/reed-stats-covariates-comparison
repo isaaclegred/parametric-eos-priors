@@ -1,0 +1,52 @@
+#!/bin/bash
+
+NUM_POINTS=101
+MAX_NUM_SAMPLES=100000
+
+#---
+
+MAIN_DIR=/home/isaac.legred/New_NICER/NewAnalysis/
+
+declare -A PATHS
+declare -A WEIGHTS
+
+PATHS["Prior"]="$MAIN_DIR/corrected_no_j0740_post.csv"
+
+for TAG in "no_j0740" "all_miller" "all_riley"
+do
+    PATHS[$TAG]="${MAIN_DIR}/corrected_${TAG}_post.csv"
+    WEIGHTS[$TAG]="--weight-column logweight_total --weight-column-is-log logweight_total"
+done
+
+#---
+
+for NAME in ${!PATHS[@]}
+do
+
+    echo "--------------------------------------------------"
+    echo "$NAME"
+    echo "--------------------------------------------------"
+
+    kde-stats-samples \
+        ${PATHS[$NAME]} \
+        Mmax 'R(M=1.4)' 'R(M=2.0)' 'Lambda(M=1.4)' 'Lambda(M=2.0)' 'pressurec2(baryon_density=2.8e+14)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' 'DeltaR(2.0-1.4)'  'cs2c2max' 'baryon_density(cs2c2@cs2c2max)' 'pressurec2(cs2c2@cs2c2max)' \
+        --column-range Mmax 1.90 3.0 \
+        --column-range 'R(M=2.0)' 2.0 17.0 \
+        --column-range 'Lambda(M=2.0)' 2.0 1000 \
+        --column-range 'R(M=1.4)' 8.0 17.0 \
+        --column-multiplier 'pressurec2(baryon_density=2.8e+14)' c2 \
+        --one-dim-confidence-region-scientific-notation 'pressurec2(baryon_density=2.8e+14)'\
+        --column-multiplier 'pressurec2(baryon_density=5.6e+14)' c2 \
+        --one-dim-confidence-region-scientific-notation 'pressurec2(baryon_density=5.6e+14)'\
+        --column-multiplier 'pressurec2(baryon_density=1.68e+15)' c2 \
+        --one-dim-confidence-region-scientific-notation 'pressurec2(baryon_density=1.68e+15)'\
+        --column-multiplier 'pressurec2(cs2c2@cs2c2max)' c2 \
+        --one-dim-confidence-region-scientific-notation 'pressurec2(cs2c2@cs2c2max)'\
+        --one-dim-confidence-region-scientific-notation 'baryon_density(cs2c2@cs2c2max)' \
+        ${WEIGHTS[$NAME]} \
+        --one-dim-confidence-region-format4tex \
+        --num-points $NUM_POINTS \
+        --one-dim-confidence-region-samples .9 \
+        -v 
+
+done

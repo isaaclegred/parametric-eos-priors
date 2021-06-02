@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./correct_cs2.sh
+Arguments  = "$(Process)"
+Log        = ./run_correct/correct.log
+Output     = ./run_correct/correct.out
+Error      = ./run_correct/correct.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

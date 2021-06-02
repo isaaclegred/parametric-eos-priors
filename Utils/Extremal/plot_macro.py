@@ -38,14 +38,14 @@ if __name__ == "__main__":
     file_name = args.file_name + ".csv"
     plot_index = args.plot_index
     data = np.loadtxt(file_name, skiprows=1, delimiter=",")
-    data2 = np.loadtxt("../../macro-css.csv", skiprows=1, delimiter=",")
+#    data2 = np.loadtxt("../../macro-css.csv", skiprows=1, delimiter=",")
     data_names = ["central density(cgs)", "radius(km)", "mass (solar masses)"]
     other_data_name  =data_names[plot_index]
     
     radii = data[:, 1]
-    radii2 = data2[:,2]
+ #   radii2 = data2[:,2]
     other = data[:, plot_index]
-    other2 = data2[:,1]
+  #  other2 = data2[:,1]
     #plt.plot(radii2, other2, label="phil's", color="r")
     plt.plot(radii, other, label="extremal")
     plt.ylabel(other_data_name)
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     plt.xlim((5, 21))
     plt.legend()
     plt.show()
-    plt.savefig(args.file_name + ".png")
+    plt.savefig("/home/isaac.legred/"+args.file_name + ".png")

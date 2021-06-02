@@ -1,0 +1,10 @@
+universe   = vanilla
+Executable = ./process_quantiles_mr.sh
+Arguments  =
+Log        = ./run_mr/mr.log
+Output     = ./run_mr/mr.out
+Error      = ./run_mr/mr.error
+getenv = True
+accounting_group = ligo.dev.o3.cbc.pe.lalinference
+accounting_group_user = isaac.legred
+queue 1

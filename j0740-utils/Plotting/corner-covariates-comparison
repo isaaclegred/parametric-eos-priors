@@ -1,0 +1,102 @@
+#!/bin/bash
+
+### make plots of nuclear parameters alongside EoS params and macroscopic observables
+
+# E_beta,E_PNM,x,S0,L,Ksym,eps_total,eps_electron,mu_electron,EoS,Mmax,numbranches,logweight_NICER,logweight_GW170817,logweight_GW190425,logweight_J0348,logweight_J0740,logweight_J1614,pressurec2(baryon_density=1.4e+14),pressurec2(baryon_density=2.8e+14),pressurec2(baryon_density=4.2e+14),pressurec2(baryon_density=5.6e+14),pressurec2(baryon_density=8.4e+14),pressurec2(baryon_density=1.12e+15),energy_densityc2(baryon_density=1.4e+14),energy_densityc2(baryon_density=2.8e+14),energy_densityc2(baryon_density=4.2e+14),energy_densityc2(baryon_density=5.6e+14),energy_densityc2(baryon_density=8.4e+14),energy_densityc2(baryon_density=1.12e+15),R(M=1.4),R(M=1.6),Lambda(M=1.4),Lambda(M=1.6)
+
+#-------------------------------------------------
+
+NUM_POINTS=101
+MAX_NUM_SAMPLES=100000
+
+
+
+
+#---
+
+# plot different posteriors for the same set of prior draws
+# this is irrelevant, at this point all of the
+# data is already collated, just need one tag value
+TAGS="/home/philippe.landry/nseos/eos/gp/mrgagn/"
+
+for TAG in $TAGS
+do
+
+    echo "----------"
+    echo "processing $TAG"
+    echo "----------"
+    # Again this is silly but will make things easier
+    # This script should only be called by condor, and in particular with
+    # the submit file that requires you to be in the correct directory anways
+    # this shouldn't cause big problems for now
+  
+    cd ../..
+    MAIN_DIR=$(pwd)
+    cd Utils/Plotting
+    
+    PSR_SAMPS=$MAIN_DIR"/corrected_psr_post_high_m.csv"
+    PSR_GW_SAMPS=$MAIN_DIR"/corrected_psrgw_post_high_m.csv"
+    ALL_SAMPS=$MAIN_DIR"/corrected_all_miller_post.csv"
+    NO_NICER_SAMPS=$MAIN_DIR"/corrected_no_j0740_post.csv"
+    PRIOR_SAMPS=$MAIN_DIR"/corrected_no_j0740_post.csv"
+
+    PRIOR="PRIOR"
+    PSR="PSR"
+    PSRGW="PSR+GW"
+    ALL="PSR+GW+NICER"
+    NO_NICER="PSR+GW+J0030"
+    WITH_NICER="PSR+GW+J0030+J0740"
+    
+    kde-corner-samples \
+        Mmax 'R(M=1.4)' 'R(M=2.0)' 'Lambda(M=1.4)' 'Lambda(M=2.0)' 'pressurec2(baryon_density=5.6e+14)' 'pressurec2(baryon_density=1.68e+15)' \
+        --column-label Mmax '$M_\mathrm{max}\ [M_\odot]$' \
+        --column-range Mmax 1.90 3.0 \
+        --column-bandwidth Mmax 0.04 \
+        --column-label 'R(M=1.4)' '$R_{1.4}\ [\mathrm{km}]$' \
+        --column-range 'R(M=1.4)' 8.5 16.0 \
+        --column-bandwidth 'R(M=1.4)' 0.20 \
+        --column-label 'R(M=2.0)' '$R_{2.0}\ [\mathrm{km}]$' \
+        --column-range 'R(M=2.0)' 9.1 14.9 \
+        --column-bandwidth 'R(M=2.0)' 0.20 \
+        --column-label 'Lambda(M=1.4)' '$\Lambda_{1.4}$' \
+        --column-range 'Lambda(M=1.4)' 1.0 999.0 \
+        --column-bandwidth 'Lambda(M=1.4)' 40 \
+        --column-label 'Lambda(M=2.0)' '$\Lambda_{2.0}$' \
+        --column-range 'Lambda(M=2.0)' 1.0 150.0 \
+        --column-bandwidth 'Lambda(M=2.0)' 5 \
+        --logcolumn 'pressurec2(baryon_density=5.6e+14)' \
+        --column-label 'pressurec2(baryon_density=5.6e+14)' '$\log_{10}\left(p_{2.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
+        --column-range 'pressurec2(baryon_density=5.6e+14)' 12.9 14.2 \
+        --column-bandwidth 'pressurec2(baryon_density=5.6e+14)' 0.10 \
+        --column-multiplier "pressurec2(baryon_density=5.6e+14)" .43429\
+        --logcolumn 'pressurec2(baryon_density=1.68e+15)' \
+        --column-label 'pressurec2(baryon_density=1.68e+15)' '$\log_{10}\left(p_{6.0}/c^2\ [\mathrm{g}/\mathrm{cm}^3]\right)$' \
+        --column-range 'pressurec2(baryon_density=1.68e+15)' 14.2 15.5 \
+        --column-bandwidth 'pressurec2(baryon_density=1.68e+15)' 0.10 \
+        --column-multiplier "pressurec2(baryon_density=1.68e+15)" .43429\
+        -s $PRIOR $PRIOR_SAMPS \
+        --color $PRIOR k \
+        -s $NO_NICER $NO_NICER_SAMPS \
+        --color $NO_NICER  c \
+        --weight-column $NO_NICER logweight_total \
+        --weight-column-is-log $NO_NICER logweight_total \
+        -s $WITH_NICER $ALL_SAMPS \
+        --color $WITH_NICER b \
+        --weight-column $WITH_NICER logweight_total \
+        --weight-column-is-log $WITH_NICER logweight_total \
+        --output-dir $MAIN_DIR \
+        --max-num-samples $PRIOR $MAX_NUM_SAMPLES\
+        --tag "covariates-newnicer-comparative-events" \
+        --num-proc 8 \
+        --num-points $NUM_POINTS \
+        --level 0.9 \
+        --legend \
+        --grid \
+        --rotate-xticklabels 90 \
+        --figwidth 11.8 \
+        --figheight 11.8 \
+        --Verbose \
+        --no-scatter \
+        --Verbose 
+        
+done
