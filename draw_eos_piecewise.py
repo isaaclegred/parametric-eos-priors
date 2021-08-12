@@ -76,7 +76,8 @@ class eos_polytrope:
                     print(pres, "failed to produce a valid sound speed")
                     break
         else:
-            cs  = lalsim.SimNeutronStarEOSSpeedOfSound(p, self.eos)
+            h = lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p, self.eos)
+            cs  = lalsim.SimNeutronStarEOSSpeedOfSound(h, self.eos)
         return cs
     def eval_baryon_density(self, p):
         if isinstance(p, list) or isinstance(p, np.ndarray):    

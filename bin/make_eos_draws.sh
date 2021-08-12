@@ -12,16 +12,18 @@ prior_info=$5
 
 eos_model=$(echo $prior_info| cut  -d " " -f1)
 prior_tag=$(echo $prior_info| cut  -d " " -f2)
-# Will probably want to add more executables
+# Will probably want to add more executables (keep an eye on pathnames (better way to do this?))
 model_executable=""
-if [[ $eos_model == "*iecewise*" ]]; then
+if [[ $eos_model == *"iecewise" ]]; then
     model_executable=$HOME"/parametric-eos-priors/draw_eos_piecewise.py"
-if [[ $eos_model == "*os*"]]
+elif [[ $eos_model == *"os" ]]; then
+    model_executable=$HOME"/parametric-eos-priors/draw_eos_sos.py"     
 else 
     model_executable=$HOME"/parametric-eos-priors/draw_eos_spectral.py"
 fi
-mkdir $eos_dir_name
-cd $eos_dir_name
+echo "using $model_executable"
+mkdir ../eos_draws/$eos_dir_name
+cd ../eos_draws/$eos_dir_name
 
 for raw_index in $(seq $min_index $max_index)
 do
@@ -34,7 +36,7 @@ do
     # This is a bit of a problem, I don't really want to 
     # write code for python 2, but much of the code
     # I'm using is incompatible with python 3
-    python3.7 $model_executable --num-draws $eos_per_dir --dir-index $index --prior-tag $prior_tag
+    python $model_executable --num-draws $eos_per_dir --dir-index $index --prior-tag $prior_tag
     cd .. 
 done
 cd ..

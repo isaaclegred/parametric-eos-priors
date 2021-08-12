@@ -54,4 +54,4 @@ if __name__ == "__main__":
     plt.xlim((5, 21))
     plt.legend()
     plt.show()
-    plt.savefig("/home/isaac.legred/"+args.file_name + ".png")
+    plt.savefig("./"+args.file_name + ".png")

@@ -1,9 +1,10 @@
-#Test Sampling eos's from spectral coefficients
+#Sampling EoSs from a parametrization of the speed of sound.
 import numpy as np
 import draw_eos_piecewise as pyeos
 import scipy.interpolate as interp
 import scipy.optimize as optimize
-import scipy.integtate as integrate
+import scipy.integrate as integrate
+import scipy
 import lalsimulation as lalsim
 import lalinference as lalinf
 import lal
@@ -31,8 +32,12 @@ p_range = (1e31, 1e37)
 p_0 = 3.9e32
 
 
-# What to put here?
-rho_0 = 2.4e14 # g/cm**3
+
+# We want to transition to the model slightly below
+rho_0 = 2.8e14 # g/cm**3
+rho_0_si = 2.8e17 # kg/m**3
+rho_small = rho_0/2
+c2si = (2.998e8)**2
 
 a1_range=(.1, 1.5)
 a2_range=(1.5, 12)
@@ -45,31 +50,71 @@ a5_range=(.1, 1)
 # This can be called as a script, in that case it produces a single "draw file" which contains
 # a tabulated eos of (pressure, energy density, baryon density)
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
-parser.add_argument("--num-draws", type=int, dest="num_draws")
-parser.add_argument("--dir-index", type=int, dest="dir_index")
+parser.add_argument("--num-draws", type=int, dest="num_draws", default=1)
+parser.add_argument("--dir-index", type=int, dest="dir_index", default=0)
+parser.add_argument("--prior-tag", type=str, dest="prior_tag", default="uniform")
+
 sly_polytrope_model = pyeos.eos_polytrope(34.384, 3.005, 2.988, 2.851)
-sly_p_1 = 2.6e32 # SLy pressure at 2.4e17 kg/m^3, this is in SI (Pa)
+sly_p_1 = 2e32 #(SI, i.e. Pa)  This is an arbitrary cutoff point
+sly_eps_1 = sly_polytrope_model.eval_energy_density(sly_p_1) #SI J/cm**3
+sly_rho_1 = sly_polytrope_model.eval_baryon_density(sly_p_1) #SI g/cm**3
+
+# Eval f1(val) if val > thresh and f2(val) otherwise
+# doesn't work with arrays
+def function_switch(high_val_func, low_val_func, thresh, val):
+    if val > thres:
+        return high_val_func(val)
+    else:
+        return low_val_func(val)
+
+# Return a function which gives the speed of sound at all points
 def get_cs2c2(a1, a2, a3, a4, a5, a6):
-    fun = lambda x : a1*np.exp(-1/2*(x-a2)**2/a3**2) + a6 +(1/3 - a6)/(1 + e**(-a5(x-a4)))
+    print("something broken in get_cs2c2?", a1, a2, a3, a4, a5, a6)
+    fun = lambda x : a1*np.exp(-1/2*(x-a2)**2/a3**2) + a6 +(1/3 - a6)/(1 + np.exp(-a5*(x-a4)))
     return fun
-def tabulate_values(eps_min, eps_max, cs_2, p_min):
+def tabulate_values(eps_min, eps_max, cs_2c2, p_min, rho_min):
     # Find low density eos
     # they glue to a particular eos but I think it's better
     # to glue to SLy for consistency.  
-    # Somehow need to know the value of a before this point?
-    eps_vals = np.linspace(eps_min, eps_max, 500)
+    # p_min should be decided upon ahead of time, and (eps_min, p_min)
+    # should be a point on the SLy eps-p curve which is low enough
+    # to be considered "known"
+    eps_vals = np.geomspace(eps_min, eps_max, 500)
     def dp_and_rho(eps, p_and_rho):
         p = p_and_rho[0]
         rho = p_and_rho[1]
-        dp = cs_2(eps)
-        drho = rho/(eps + p)
+        # Define the pressure and density differentials
+        dp = cs_2c2(eps/rho_0/c2si)
+        drho = rho/(eps + p) # Don't think too hard about the units
         return np.array([dp, drho])
-    integrate.solve_ivp(cs_2, eps_vals, p_min )
-# This class is meant to hose all of the functions needed to interact with a
-# paramaterized eos, without actually exposing the client to any of the lalsimulation
-# functions (which can be somewhat volatile and don't come with object orientation)
+    tabulated_eos = integrate.solve_ivp(dp_and_rho, ((1-10**-10)*eps_min, (1+10**-10)*eps_max), np.array([p_min, rho_min]), t_eval=eps_vals)
+    eps = tabulated_eos.t
+    p = tabulated_eos.y[0,:]
+    rho =tabulated_eos.y[1,:]
+    # Note the order of the returns
+    return p, eps, rho
+
+# An EoS model based on the speed of sound parametrization
 
 class eos_speed_of_sound:
+    def compute_a6(self):
+        # In the paper this is made to match some EFT, but here we want to match it to SLy to make
+        # it consistent at low denisites with the other EoSs
+        # Shoot for it?
+        to_match  = self.sly_model.eval_speed_of_sound(sly_p_1)**2/c2si
+        eps_match = self.sly_model.eval_energy_density(sly_p_1)
+        def diff(self, a_6_guess):
+            cs2_guess = self.construct_cs2_helper(a_6_guess)
+            print("to_match is", to_match)
+            print("eps_match is", eps_match/(rho_0_si*c2si))
+            print("guess is",cs2_guess(eps_match/(rho_0_si*c2si)))
+            error = to_match - cs2_guess(eps_match/(c2si*rho_0_si))
+            print("error is", error)
+            return error
+        result = optimize.root_scalar(lambda a_6_guess : diff(self, a_6_guess), x0=0, x1=1, fprime = lambda x : -1)
+        print("root is", result.root)
+        return result.root
+
     def __init__(self, a1, a2, a3, a4, a5):
 
         self.x =np.linspace(0,16,1000) #eps/(m_N n_0)
@@ -81,109 +126,68 @@ class eos_speed_of_sound:
         self.sly_model= sly_polytrope_model
         self.eps_of_p = None
         self.rho_of_p = None
-        self.c2si = (3e8)**2
+        # The lower point is  arbitrary
+        self.p_small = np.geomspace(10**6, sly_p_1, 200)
+        self.eps_small = sly_polytrope_model.eval_energy_density(self.p_small)
+        self.rho_small = sly_polytrope_model.eval_baryon_density(self.p_small)
+        self.p_main = None
+        self.eps_main = None
+        self.rho_main = None
         # need to find a6 by gluing, should have a procedure to do this right
-        # off the bat i think
-        self.a6  = compute_a6(self)
-        
-        self.cs2 = self.construc_cs2(self, self.a6)
-        p, eps, rho_b = tabulate_values(eps_min, eps_max, self.cs2)
+        # off the bat i think (edit : implemented, need to check if works)
+        self.a6  = self.compute_a6()
+        self.cs2 = self.construct_cs2_helper(self.a6)
+        eps_min = sly_eps_1
+        eps_max = 7e20*c2si # in SI, kg/m^3, relatively arbitrary
+        self.p_main, self.eps_main, self.rho_main = tabulate_values(eps_min, eps_max, self.cs2, sly_p_1, sly_rho_1)
         
 
     # Evaluate the eos in terms of epsilon(p)
-    def eval_energy_density(self, p):
+    def eval_energy_density(self, p, use_low_without_eval=False):
+        # if you know you're using the low-p definition ahead of time
+        if use_low_without_eval:
+            return sly_polytrope_model.eval_energy_density(p1)
         if self.eps_of_p == None:
-            print("uff da")
-            #Interpolate a function
-            
-        if isinstance(p, list) or isinstance(p, np.ndarray):    
-            eps = np.zeros(len(p))  
-            for i, pres in enumerate(p):
-                eps[i] =  1# Eval function, try to do our best to vectorize this before hand
-        else:
-            eps = 1# Eval function 
-        return eps
-    # Evaluate the phi parameter as used in the non-parametric papers,
-    # Not currently used
-    def eval_phi(self, p):
-        if isinstance(p, list) or isinstance(p, np.ndarray):    
-            eps = np.zeros(len(p))  
-            for i, pres in enumerate(p):
-                eps[i] = lalsim.SimNeutronStarEOSEnergyDensityDerivOfPressure(pres,self.eos)    
-        else:
-             eps = lalsim.SimNeutronStarEOSEnergyDensityDerivOfPressure(p, self.eos)
-        return eps
+            #Interpolate a function eps(p)
+            self.eps_of_p = scipy.interpolate.interp1d(np.concatenate([self.p_small, self.p_main]), np.concatenate([self.eps_small, self.eps_main]), kind='cubic')
+        return self.eps_of_p(p)
     # Evaluate the baryon density at a particular pressure
     def eval_baryon_density(self, p):
-        if isinstance(p, list) or isinstance(p, np.ndarray):    
-            rho = np.zeros(len(p))  
-            for i, pres in enumerate(p):
-                rho [i] = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
-                    lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(pres,self.eos), self.eos)    
-        else:
-            rho  = lalsim.SimNeutronStarEOSRestMassDensityOfPseudoEnthalpy(
-                lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(p,self.eos), self.eos) 
-        return rho
+        #interpolate a function rho(p)
+        if self.rho_of_p is None:
+            self.rho_of_p = scipy.interpolate.interp1d(np.concatenate([self.p_small, self.p_main]), np.concatenate([self.rho_small, self.rho_main]), kind='cubic')
+        return self.rho_of_p(p)
     # Evluate the speed of sound at a particular pressure
     def eval_speed_of_sound(self, p):
-        if isinstance(p, list) or isinstance(p, np.ndarray):
-            cs = np.zeros(len(p))
-            for i, pres in enumerate(p):
-                try:
-                    h = lalsim.SimNeutronStarEOSPseudoEnthalpyOfPressure(pres, self.eos)
-                    cs[i] = lalsim.SimNeutronStarEOSSpeedOfSound(h, self.eos)
-                except:
-                    print(pres, "failed to produce a valid sound speed")
-                    break
-        else:
-            cs  = lalsim.SimNeutronStarEOSSpeedOfSound(p, self.eos)
-        return cs
-    #Evaluate the exponent polytope (I don't really know if this works, wouldn't recommend using)
-    def eval_Gamma(self, p):
-        x = np.log( p/p_0)
-        return np.exp(self.gamma0 + self.gamma1 * x + self.gamma2 * x**2 + self.gamma3 * x**3 )
-    # Return true if the local speed of sound is larger than the speed of light at the highest pressure allowed for a 
-    # certain EOS
-    def is_causal(self, ps):
-        c_si = c/100 # The speed of sound in SI
-        cs = self.eval_speed_of_sound(ps)
-        cs_max = max(cs)
-        print("cs_max is", cs_max)
-        return cs_max < c_si*1.1
-    def get_max_M(self):
-        return lalsim.SimNeutronStarMaximumMass(self.family)/lal.MSUN_SI
+        return self.cs2(self.eval_energy_density(p)/rho_0)
     # thin wrapper around function that actually computes the thing (rename?)
-    def construct_cs2(self, a_6):
+    def construct_cs2_helper(self, a_6):
         a1 = self.a1
-        a2 = self.a2,
+        a2 = self.a2
         a3 = self.a3
         a4 = self.a4
         a5 = self.a5
         a6 = a_6
-        c2si = (3e8)**2
-        return c2si * get_cs2c2(a1, a2, a3, a4, a5, a6)
+        print("a_6 in construct_cs2 is", a_6)
+        return get_cs2c2(a1, a2, a3, a4, a5, a6)
             
-        return
-    def compute_a6(self):
-        # In the paper this is made to match some EFT, but here we want to match it to SLy to make
-        # it consistent at low denisites with the other EoSs
-        # Shoot for it?
-        to_match  = self.sly_model.eval_speed_of_sound(sly_p_1)
-        eps_match = self.sly_model.eval_energy_density(sly_p_1)
-        def diff(self, a_6_guess):
-            cs2_guess = construct_cs2(self, a_6_guess)
-            error = to_match - cs2_guess(eps_match)
-            return error
-        result = optimize.root_scalar(diff)
-        return result.root
- 
+
+
+
+def get_eos_realization_sos(a1_range=a1_range, a2_range=a2_range, a3_range=a3_range, a4_range=a4_range, a5_range=a5_range):
+    a1=np.random.uniform(*a1_range)
+    a2=np.random.uniform(*a2_range)
+    a3=np.random.uniform(*a3_range)
+    a4=np.random.uniform(*a4_range)
+    a5=np.random.uniform(*a5_range)
+    return eos_speed_of_sound(a1, a2, a3, a4, a5)
 def create_eos_draw_file(name):
     print(name)
-    eos_poly = get_eos_realization_mapped_gaussian_constrained_spec(r0_range, r1_range, r2_range, r3_range)
+    eos_poly = get_eos_realization_sos(a1_range, a2_range, a3_range, a4_range, a5_range)
     if True:
-    # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-        p_small = np.linspace(1.0e12, 1.3e30, 300)
-        p_main = np.linspace (1.3e30, 9.0e36, 500)
+    # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step  ) 
+        p_small = np.geomspace(1.2e10, 1.3e30, 300)
+        p_main = np.geomspace (1.4e30, 9.0e36, 500)
         eps_small=  eos_poly.eval_energy_density(p_small)
         eps_main = eos_poly.eval_energy_density(p_main)
         rho_b_small = eos_poly.eval_baryon_density(p_small)

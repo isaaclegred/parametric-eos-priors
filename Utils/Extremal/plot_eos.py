@@ -47,7 +47,7 @@ if __name__ == "__main__":
     other = data[:, plot_index]
     #other2 = data2[:, plot_index]
     ax = plt.figure()
-    ax = plt.loglog(other, ps, label="extremal")
+    ax = plt.loglog(other, ps, label=args.file_name)
     #plt.loglog(other2, ps2, color="r", label="phil's")
     plt.ylabel(r"$p/c^2$ (cgs)")
     plt.xlabel(other_data_name + "(cgs)" )
