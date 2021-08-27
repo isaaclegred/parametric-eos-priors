@@ -194,14 +194,6 @@ def get_eos_realization_gaussian_constrained_poly (logp1_range = logp1_range,
     print(logp1, gamma1, gamma2, gamma3)
     return this_polytrope
 
-
-
-
-    
-# Because we have an analytic equation of state, we can compute the derivative dmu/dp 
-# analytically.  Therefore we can compute phi analytically (Doesn't seem to actually be necessary)
-
-
 # Stitch EoS onto the known EoS below nuclear saturation density. 
 # Use Sly log(p1) = 34.384, gamma1 = 3.005, gamma2 = 2.988, gamma3 = 2.851
 # There's some subtlety here related to where the pressure is known.  Here
@@ -231,11 +223,11 @@ def get_draw_function_from_tag(prior_tag):
     else:
         print("couldn't identify the piecewise prior tag, using the uniform prior")
         return get_eos_realization_uniform_constrained_poly
-        
+
 def create_eos_draw_file(name, draw_function):
-    # FIXME WORRY ABOUT CGS VS SI!!!!! (UPDATE : Everything is in SI till the last step :/ ) 
-    p_small = np.linspace(1.0e12, 1.3e32, 600)
-    p_main = np.geomspace (1.3e32, 9.0e36, 700)
+    eos_poly = draw_function()
+    p_small = np.linspace(1.0e12, 1.3e30, 800)
+    p_main = np.geomspace (1.3e30, 9.0e36, 900)
     eps_small=  eos_poly.eval_energy_density(p_small)
     eps_main = eos_poly.eval_energy_density(p_main)
     rho_b_small = eos_poly.eval_baryon_density(p_small)
@@ -246,14 +238,14 @@ def create_eos_draw_file(name, draw_function):
     data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
     np.savetxt(name,data, header = 'pressurec2,energy_densityc2,baryon_density',
                fmt='%.10e', delimiter=",", comments="")
-    
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
     num_draws = args.num_draws
     dir_index = args.dir_index
     prior_tag = args.prior_tag
-    
+
     for i in range(num_draws):
         name = "eos-draw-" + "%06d" %(dir_index*num_draws + i) + ".csv"
         create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))

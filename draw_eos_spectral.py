@@ -293,11 +293,7 @@ def get_eos_realization_mapped_gaussian_constrained_spec (r0_range = r0_range,
     ranges= [r0_range, r1_range, r2_range, r3_range]
     means = [np.mean(this_range) for this_range in ranges]
     cov = 1/6*np.diag([np.std(this_range) for this_range in ranges])
-    [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov) 
-    
-    
-
-    
+    [r0, r1, r2, r3] = np.random.multivariate_normal(means, cov)  
     ################################################################
     gammas = map_rs_to_gammas(r0, r1, r2, r3)
     gamma0 = gammas[0,0]
@@ -361,7 +357,7 @@ def get_draw_function_from_tag(prior_tag):
         print("you're nuts")
         return get_eos_realization_uniform_constrained_spec
     else:
-        print("couldn't identify the piecewise prior tag,  /n using the uniform prior")
+        print("couldn't identify the spectral prior tag, using the uniform prior")
         return get_eos_realization_mapped_constrained_spec
 
 
@@ -371,8 +367,8 @@ def create_eos_draw_file(name, draw_function):
     eos_poly = draw_function(r0_range, r1_range, r2_range, r3_range)
     if True:
     # FIXME WORRY ABOUT CGS VS SI!!!!! (Everything is in SI till the last step :/ ) 
-        p_small = np.linspace(1.0e12, 1.3e30, 300)
-        p_main = np.linspace (1.3e30, 9.0e36, 500)
+        p_small = np.linspace(1.0e12, 1.3e30, 1100)
+        p_main = np.geomspace(1.3e30, 9.0e36, 1200)
         eps_small=  eos_poly.eval_energy_density(p_small)
         eps_main = eos_poly.eval_energy_density(p_main)
         rho_b_small = eos_poly.eval_baryon_density(p_small)

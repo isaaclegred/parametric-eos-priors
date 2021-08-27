@@ -491,7 +491,7 @@ def e_p2rho(epsc2, pc2, rhob0):
     return rhob0*np.exp(DeltaLogrho)
 # Just a wrapper to keep things more general overall sly has nothing to do with this
 def sample_small_data_nonparametric(sly=False):
-    return sample_table("/home/philippe.landry/gpr-eos-stacking/EoS/mrgagn/", 2000, 1000, rho_thresh=4.8e14)
+    return sample_table("/home/philippe.landry/nseos/eos/gp/mrgagn/", 2000, 1000, rho_thresh=4.8e14)
 def sample_small_data_piecewise(sly=False):
     eos_poly = None
     if sly :

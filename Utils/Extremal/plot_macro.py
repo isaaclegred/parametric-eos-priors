@@ -30,12 +30,14 @@ sns.set_context("notebook", rc={"font.size":16,
 
 parser = argparse.ArgumentParser(description='Get needed info')                    
 parser.add_argument("--infile-prefix", type=str, dest="file_name", default="macro-draw-000000")                                            
-parser.add_argument("--plot-index", type=int, dest="plot_index", default=2)                                          
+parser.add_argument("--plot-index", type=int, dest="plot_index", default=2)
+parser.add_argument("--eos-dir", type=str, dest="eos_dir", default=".")
+parser.add_argument("--outdir", type=str, dest="outdir", default=".")
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    file_name = args.file_name + ".csv"
+    file_name = args.eos_dir + "/" + args.file_name + ".csv"
     plot_index = args.plot_index
     data = np.loadtxt(file_name, skiprows=1, delimiter=",")
 #    data2 = np.loadtxt("../../macro-css.csv", skiprows=1, delimiter=",")
@@ -47,11 +49,11 @@ if __name__ == "__main__":
     other = data[:, plot_index]
   #  other2 = data2[:,1]
     #plt.plot(radii2, other2, label="phil's", color="r")
-    plt.plot(radii, other, label="extremal")
+    plt.plot(radii, other, label=file_name)
     plt.ylabel(other_data_name)
     plt.xlabel( data_names[1])
-    plt.ylim((1,3))
+    plt.ylim((.2,3))
     plt.xlim((5, 21))
     plt.legend()
     plt.show()
-    plt.savefig("./"+args.file_name + ".png")
+    plt.savefig(args.outdir + "/"+ args.file_name + ".png")

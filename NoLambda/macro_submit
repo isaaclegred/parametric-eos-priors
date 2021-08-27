@@ -1,8 +1,8 @@
 
 
 Universe   = vanilla
-Executable = ./bin/macrofy.sh
-Arguments  = "$(Process) 1 0 '/home/isaac.legred/ExtremalEOS/extremal_eos_draw' 20"
+Executable = macrofy.sh
+Arguments  = "$(Process) 1 0 '/home/isaac.legred/ParametricPaper/ExtremalData' 500"
 Log        = macro.log
 Output     = macro.out
 Error      = macro.error
