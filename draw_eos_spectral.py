@@ -64,8 +64,8 @@ def map_rs_to_gammas(r0, r1, r2, r3):
 # This can be called as a script, in that case it produces a single "draw file" which contains
 # a tabulated eos of (pressure, energy density, baryon density)
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
-parser.add_argument("--num-draws", type=int, dest="num_draws")
-parser.add_argument("--dir-index", type=int, dest="dir_index")
+parser.add_argument("--num-draws", type=int, dest="num_draws", default=1)
+parser.add_argument("--dir-index", type=int, dest="dir_index", default=0)
 parser.add_argument("--prior-tag", type=str, dest="prior_tag", default="uniform")
 
 # This class is meant to hose all of the functions needed to interact with a
@@ -85,7 +85,8 @@ class eos_spectral:
             self.gamma3)
 
         self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
-        
+    def get_params(self):
+       return [self.gamma0, self.gamma1, self.gamma2, self.gamma3]
     # Get the eos family from the paramaters. 
     def get_eos(self):
         return self.eos
@@ -351,10 +352,8 @@ def get_draw_function_from_tag(prior_tag):
     elif prior_tag == "Gaussian":
         return get_eos_realization_mapped_gaussian_constrained_spec
     elif prior_tag == "unconstrained":
-        print("you're nuts")
         return get_eos_realization_uniform_constrained_spec
     elif prior_tag == "Unconstrained":
-        print("you're nuts")
         return get_eos_realization_uniform_constrained_spec
     else:
         print("couldn't identify the spectral prior tag, using the uniform prior")
@@ -379,14 +378,23 @@ def create_eos_draw_file(name, draw_function):
         data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
         np.savetxt(name,data, header = 'pressurec2,energy_densityc2,baryon_density',
                    fmt='%.10e', delimiter=",", comments="")
+        return eos_poly.get_params()
     else :
-        create_eos_draw_file(name)
+        return create_eos_draw_file(name)
 
 if __name__ == "__main__":
     args = parser.parse_args()
     num_draws = args.num_draws
     dir_index = args.dir_index
     prior_tag = args.prior_tag
+    print(prior_tag)
+    parameters_used = []
+    eos_nums = np.ndarray((num_draws, 1))
     for i in range(num_draws):
-        name = "eos-draw-" + "%06d" %(dir_index*num_draws + i) + ".csv"
-        create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))
+        eos_num = dir_index*num_draws + i
+        name = "eos-draw-" + "%06d" %(eos_num) + ".csv"
+        params = create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))
+        parameters_used.append(params)
+        eos_nums[i,0] = eos_num
+    metadata = np.concatenate([eos_nums, np.array(parameters_used)], axis=1)
+    np.savetxt("eos_metadata-"+"%06d" %(dir_index) + ".csv", metadata, header="eos, gamma0, gamma1, gamma2, gamma3", delimiter=",", comments="")

@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+INFILE_PREFIX=$1
+EOS_DIR=$2
+PLOT_INDEX=2
+
+
+python ~/parametric-eos-priors/Utils/Extremal/plot_macro.py --infile-prefix $INFILE_PREFIX --plot-index $PLOT_INDEX --eos-dir $EOS_DIR --outdir "/tmp/"
+echo "/tmp/"$INFILE_PREFIX".png"

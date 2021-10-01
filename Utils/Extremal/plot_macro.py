@@ -35,9 +35,15 @@ parser.add_argument("--eos-dir", type=str, dest="eos_dir", default=".")
 parser.add_argument("--outdir", type=str, dest="outdir", default=".")
 
 
+# if somebody leaves in a .csv we can handle it
+def remove_ending(file_name):
+    if file_name[-4:] == ".csv":
+        return file_name[:-4]
+    return file_name
 if __name__ == "__main__":
     args = parser.parse_args()
-    file_name = args.eos_dir + "/" + args.file_name + ".csv"
+    local_file_name = remove_ending(args.file_name)
+    file_name =args.eos_dir + "/" +  local_file_name + ".csv"
     plot_index = args.plot_index
     data = np.loadtxt(file_name, skiprows=1, delimiter=",")
 #    data2 = np.loadtxt("../../macro-css.csv", skiprows=1, delimiter=",")

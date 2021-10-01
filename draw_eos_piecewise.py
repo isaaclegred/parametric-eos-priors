@@ -26,8 +26,8 @@ gamma2_range = (1.1, 4.5)
 gamma3_range = (1.1, 4.5)
 
 parser = argparse.ArgumentParser(description='Get the number of draws needed, could be expanded')
-parser.add_argument("--num-draws", type=int, dest="num_draws")
-parser.add_argument("--dir-index", type=int, dest="dir_index")
+parser.add_argument("--num-draws", type=int, dest="num_draws", default=1)
+parser.add_argument("--dir-index", type=int, dest="dir_index", default=0)
 parser.add_argument("--prior-tag", type=str, dest="prior_tag", default="uniform")
 
 
@@ -45,6 +45,10 @@ class eos_polytrope:
                                                             self.gamma2, 
                                                             self.gamma3)
         self.family = lalsim.CreateSimNeutronStarFamily(self.eos)
+
+    def get_params(self):
+        return [self.gamma1, self.gamma2, self.gamma3, self.logp1]
+   
     # Get the eos family from the paramaters. 
     def get_eos(self):
         return self.family.eos
@@ -238,14 +242,21 @@ def create_eos_draw_file(name, draw_function):
     data = np.transpose(np.stack([p/c**2*10 , eps/c**2*10, rho_b/10**3])) # *10 because Everything above is done in SI
     np.savetxt(name,data, header = 'pressurec2,energy_densityc2,baryon_density',
                fmt='%.10e', delimiter=",", comments="")
-
+    return eos_poly.get_params()
 
 if __name__ == "__main__":
     args = parser.parse_args()
     num_draws = args.num_draws
     dir_index = args.dir_index
     prior_tag = args.prior_tag
-
+    parameters_used = []
+    eos_nums = np.ndarray((num_draws, 1))
     for i in range(num_draws):
-        name = "eos-draw-" + "%06d" %(dir_index*num_draws + i) + ".csv"
-        create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))
+        eos_num = dir_index*num_draws + i
+        name = "eos-draw-" + "%06d" %(eos_num) + ".csv"
+        params = create_eos_draw_file(name, get_draw_function_from_tag(prior_tag))
+        parameters_used.append(params)
+        eos_nums[i,0] = eos_num
+    metadata = np.concatenate([eos_nums, np.array(parameters_used)], axis=1)
+    np.savetxt("eos_metadata-"+"%06d" %(dir_index) + ".csv",
+               metadata, header="eos, Gamma1, Gamma2, Gamma3, logp1", delimiter=",", comments="")

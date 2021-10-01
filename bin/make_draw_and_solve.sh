@@ -23,7 +23,7 @@ echo $obslist >> $logfile
 # write sub files
 
 execs=( "./make_eos_draws" "macrofy"  )
-args=( "\"\$(Process) $dirs_per_proc $draws_per_dir $dirname \'$draw_executable\'\"" "\"\$(Process) $dirs_per_proc $global_start $dirname $draws_per_dir\"" )
+args=( "\"\$(Process) $dirs_per_proc $draws_per_dir $dirname '$draw_executable'\"" "\"\$(Process) $dirs_per_proc $global_start $dirname $draws_per_dir\"" )
 
 for i in $(seq 0 $((${#execs[@]}-1)))
 do
@@ -49,10 +49,10 @@ echo "# draw_and_solve.dag, deploying to $rundir" > $dagfile
 
 job=0
 echo "JOB $job $rundir/make_eos_draws.sub" >> $dagfile
-echo "RETRY $job 1" >> $dagfile
+echo "RETRY $job 4" >> $dagfile
 job=$(($job+1))
 echo "JOB $job $rundir/macrofy.sub" >> $dagfile
-echo "RETRY $job 1" >> $dagfile
+echo "RETRY $job 4" >> $dagfile
 echo "PARENT 0 CHILD 1" >> $dagfile
 while [ ! -f "$dagfile" ]
 do

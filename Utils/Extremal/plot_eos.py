@@ -32,11 +32,19 @@ sns.set(font="Arial",
 parser = argparse.ArgumentParser(description='Get needed info')                    
 parser.add_argument("--infile-prefix", type=str, dest="file_name", default="eos-draw-000000")                                            
 parser.add_argument("--plot-index", type=int, dest="plot_index", default=2)                                          
+parser.add_argument("--eos-dir", type=str, dest="eos_dir", default=".")
+parser.add_argument("--outdir", type=str, dest="outdir", default=".")
 
 
+# if somebody leaves in a .csv we can handle it
+def remove_ending(file_name):
+    if file_name[-4:] == ".csv":
+        return file_name[:-4]
+    return file_name
 if __name__ == "__main__":
     args = parser.parse_args()
-    file_name = args.file_name + ".csv"
+    local_file_name = remove_ending(args.file_name)
+    file_name =args.eos_dir + "/" +  local_file_name + ".csv"
     plot_index = args.plot_index
     data = np.loadtxt(file_name, skiprows=1, delimiter=",")
     #data2 = np.loadtxt("../../css.csv", skiprows=1, delimiter=",")
@@ -55,4 +63,4 @@ if __name__ == "__main__":
     plt.xlim((10**13, 4*10.0**15))
     plt.legend()
     plt.show()
-    plt.savefig(args.file_name + ".png", bbox_inches="tight")
+    plt.savefig(args.outdir + "/"+ args.file_name + ".png")
